@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 import asyncio
-import bin.Fetchpastrace
 
 
 app = FastAPI()
@@ -21,5 +20,5 @@ async def live():
 
 
 @app.get("/session")
-async def session(year: int=2025, gp: int|str=1, racetype: str="R", data: str="Laptime"):
+async def session(year: int|None=None, gp: int|str|None=None, racetype: str|None=None, data: str|None=None):
     return
