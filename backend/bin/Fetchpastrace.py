@@ -5,12 +5,15 @@ import json
 import datetime
 
 
+fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"  # pyright: ignore
+
+
 laptime_var_selections = ["Driver", "DriverNumber", "LapNumber", "Compound", "TyreLife", "Team", "TrackStatus", "Position", "Deleted"]
 laptime_time_selections = ["Time", "LapTime", "Sector1Time", "Sector2Time", "Sector3Time", "PitOutTime"]
 
 
-result_var_selection = ["DriverNumber", "BroadcastName", "Abbreviation", "TeamName", "TeamColor", "FullName", "ClassifiedPosition", "Position", "GridPosition", "Q1", "Q2", "Q3"]
-result_time_selection = ["Time"]
+result_var_selection = ["DriverNumber", "BroadcastName", "Abbreviation", "TeamName", "TeamColor", "FullName", "ClassifiedPosition", "Position", "GridPosition"]
+result_time_selection = ["Time" , "Q1", "Q2", "Q3"]
 
 
 weather_var_selections = ["AirTemp", "Humidity", "Pressure", "Rainfall", "TrackTemp", "WindDirection", "WindSpeed"]
