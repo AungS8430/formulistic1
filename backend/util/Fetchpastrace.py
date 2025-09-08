@@ -1,4 +1,5 @@
 from functools import cache
+from typing import Literal
 import fastf1
 import pandas as pd
 import json
@@ -18,12 +19,6 @@ result_time_selection = ["Time" , "Q1", "Q2", "Q3"]
 
 weather_var_selections = ["AirTemp", "Humidity", "Pressure", "Rainfall", "TrackTemp", "WindDirection", "WindSpeed"]
 weather_time_selection = ["Time"]
-
-
-laptime_key = "laptime"
-weather_key = "weather"
-results_key = "results"
-info_key = "info"
 
 
 def gap_to_leader_process(laps: fastf1.core.Laps, drivers: list[str], total_lap: int): # pyright: ignore
@@ -93,10 +88,10 @@ def info_process(info: dict):
 @cache
 def get_session(year: int ,gp: str|int, session_type: str):
     session = fastf1.get_session(year, gp, session_type)
-    session.load()
+    session.load(telemetry=False, messages=False)
     return session
 
-def get_session_data(year: int ,gp: str|int, session_type: str, data: str):
+def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["laptime", "weather", "results", "info"]):
     session = get_session(year, gp, session_type)
     drivers = session.drivers
     total_lap = session.total_laps
