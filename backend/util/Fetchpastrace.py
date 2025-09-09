@@ -9,7 +9,7 @@ import datetime
 fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"  # pyright: ignore
 
 
-laptime_var_selections = ["Driver", "DriverNumber", "LapNumber", "Compound", "TyreLife", "Team", "TrackStatus", "Position", "Deleted"]
+laptime_var_selections = ["DriverNumber", "LapNumber", "Compound", "TyreLife", "TrackStatus", "Position", "Deleted"]
 laptime_time_selections = ["Time", "LapTime", "Sector1Time", "Sector2Time", "Sector3Time", "PitOutTime"]
 
 
