@@ -34,7 +34,7 @@ def gap_to_leader_process(laps: fastf1.core.Laps, drivers: list[str], total_lap:
     out.name = "GapToLeader"
     return out
 
-def laptime_process(laps: pd.DataFrame, drivers: list[str], total_lap: int):
+def laptime_process(laps: pd.DataFrame, drivers: list[str], total_lap: int, is_race: bool):
     out = {}
     lap_copy = laps.copy()
     lap_out = laps[laptime_var_selections]
@@ -43,7 +43,10 @@ def laptime_process(laps: pd.DataFrame, drivers: list[str], total_lap: int):
     for time_selection in laptime_time_selections:
         tem.append(time_copy[time_selection].dt.total_seconds()) # pyright: ignore
     time_out = pd.DataFrame(tem).T # pyright: ignore
-    lap_copy = pd.concat([time_out, lap_out, gap_to_leader_process(laps, drivers, total_lap).dt.total_seconds()], axis=1)
+    if is_race:
+        lap_copy = pd.concat([time_out, lap_out, gap_to_leader_process(laps, drivers, total_lap).dt.total_seconds()], axis=1)
+    else:
+        lap_copy = pd.concat([time_out, lap_out], axis=1)
     for driver in drivers:
         out[driver] = lap_copy.loc[lap_copy["DriverNumber"] == driver]
         out[driver].astype({"LapNumber": "int32"})
@@ -96,7 +99,7 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
     out = ""
     match data:
         case "laptime":
-            out = laptime_process(session.laps, drivers, total_lap)
+            out = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" else False)
         case "weather":
             out = weather_process(session)
         case "results":
