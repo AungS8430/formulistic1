@@ -9,5 +9,5 @@ def get_session(year: int ,gp: str|int, session_type: str):
     else:
         get_gp = gp
     session = fastf1.get_session(year, get_gp, session_type)
-    session.load(telemetry=False, messages=False)
+    session.load(telemetry=False)
     return session
