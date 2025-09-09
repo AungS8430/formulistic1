@@ -1,28 +1,41 @@
-import fastf1
-import pandas as pd
+import ast
 import json
-import datetime
-from fastf1.livetiming.data import LiveTimingData
 import time
 import os
-
-def tail_file(filepath):
-    try:
-        with open(filepath, 'r') as file:
-            file.seek(0, os.SEEK_END)
-            while True:
-                line = file.readline()
-                if not line:
-                    time.sleep(0.01)
-                    continue
-                print(f"New line found: {line.strip()}")
-
-    except FileNotFoundError:
-        print(f"Error: The file '{filepath}' was not found. Please ensure the fastf1 command is running.")
-        time.sleep(5)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+import asyncio
 
 
+def parse_message(msg):
+    """Ensure consistent JSON-friendly format."""
+    if isinstance(msg, (list, tuple)):
+        topic = msg[0]
+        data = msg[1]
+        timestamp = msg[2]
+        return {"Title": topic, "Data": data, "TimeStamp": timestamp}
+    elif isinstance(msg, dict):
+        return msg
+    else:
+        return {"raw": str(msg)}
+    
+async def file_watcher(filepath: str):
+    """Async generator to stream file updates line by line."""
+    if not os.path.exists(filepath):
+        yield f"data: {json.dumps({'error': f'File {filepath} not found'})}\n\n"
+        return
 
-tail_file("fake_saved_data.txt")
+    with open(filepath, "r") as f:
+        f.seek(0, os.SEEK_END)  # start at end of file
+
+        while True:
+            line = f.readline()
+            if not line:
+                await asyncio.sleep(0.1)
+                continue
+
+            try:
+                msg = ast.literal_eval(line.strip())
+                parsed = parse_message(msg)
+                yield json.dumps(parsed)
+            except Exception as e:
+                err = {"error": f"Parse failed: {str(e)}", "line": line.strip()}
+                yield json.dumps(err)
