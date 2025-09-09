@@ -1,5 +1,5 @@
 from typing import Literal
-from races import get_session
+from .races import get_session
 import fastf1
 import pandas as pd
 import json
