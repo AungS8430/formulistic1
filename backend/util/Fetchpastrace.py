@@ -1,5 +1,5 @@
-from functools import cache
 from typing import Literal
+from races import get_session
 import fastf1
 import pandas as pd
 import json
@@ -84,16 +84,6 @@ def info_process(info: dict):
         if type(itr) == datetime.datetime:
             info[idx] = itr.strftime("%Y-%m-%d %H:%M:%S")
     return info
-
-@cache
-def get_session(year: int ,gp: str, session_type: str):
-    if gp.isdigit():
-        get_gp = int(gp)
-    else:
-        get_gp = gp
-    session = fastf1.get_session(year, get_gp, session_type)
-    session.load(telemetry=False, messages=False)
-    return session
 
 def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["laptime", "weather", "results", "info"]):
     session = get_session(year, gp, session_type)
