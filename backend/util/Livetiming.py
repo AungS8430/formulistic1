@@ -1,6 +1,5 @@
 import ast
 import json
-import time
 import os
 import asyncio
 
@@ -16,7 +15,7 @@ def parse_message(msg):
         return msg
     else:
         return {"raw": str(msg)}
-    
+
 async def file_watcher(filepath: str):
     """Async generator to stream file updates line by line."""
     if not os.path.exists(filepath):
