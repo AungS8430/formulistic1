@@ -97,13 +97,13 @@ def get_session(year: int ,gp: str, session_type: str):
 
 def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["laptime", "weather", "results", "info"]):
     session = get_session(year, gp, session_type)
-    drivers = session.drivers
-    total_lap = session.total_laps
-    out = ""
     try:
         session.laps
     except Exception:
         return json.dumps(["Error", "Data not found"])
+    drivers = session.drivers
+    total_lap = session.total_laps
+    out = ""
     match data:
         case "laptime":
             out = laptime_process(session.laps, drivers, total_lap)
