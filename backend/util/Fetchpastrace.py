@@ -86,8 +86,12 @@ def info_process(info: dict):
     return info
 
 @cache
-def get_session(year: int ,gp: str|int, session_type: str):
-    session = fastf1.get_session(year, gp, session_type)
+def get_session(year: int ,gp: str, session_type: str):
+    if gp.isdigit():
+        get_gp = int(gp)
+    else:
+        get_gp = gp
+    session = fastf1.get_session(year, get_gp, session_type)
     session.load(telemetry=False, messages=False)
     return session
 
