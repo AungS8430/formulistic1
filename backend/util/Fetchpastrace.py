@@ -10,7 +10,7 @@ fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"  # pyright: 
 
 
 laptime_var_selections = ["DriverNumber", "LapNumber", "Compound", "TyreLife", "TrackStatus", "Position", "Deleted"]
-laptime_time_selections = ["Time", "LapTime", "Sector1Time", "Sector2Time", "Sector3Time", "PitOutTime"]
+laptime_time_selections = ["Time", "LapTime", "Sector1Time", "Sector2Time", "Sector3Time", "PitInTime","PitOutTime"]
 
 
 result_var_selection = ["DriverNumber", "BroadcastName", "Abbreviation", "TeamName", "TeamColor", "FullName", "ClassifiedPosition", "Position", "GridPosition"]
