@@ -8,7 +8,9 @@ def parse_message(msg):
     if isinstance(msg, (list, tuple)):
         topic = msg[0]
         data = msg[1]
-        return {"Title": topic, "Data": data}
+        time = msg[2]
+        
+        return {"Title": topic, "Data": data, "Timestamp": time}
     elif isinstance(msg, dict):
         return msg
     else:
