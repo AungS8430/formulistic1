@@ -17,25 +17,43 @@ def parse_message(msg):
         return {"raw": str(msg)}
 
 
-async def file_watcher(filepath: str):
-    """Async generator to stream file updates line by line."""
+history = []  # global buffer
+
+def add_to_history(msg):
+    history.append(msg)
+
+async def background_file_reader(filepath: str):
+    """Background task that keeps reading file and updating history."""
     if not os.path.exists(filepath):
-        yield f"data: {json.dumps({'error': f'File {filepath} not found'})}\n\n"
         return
 
     with open(filepath, "r") as f:
-        f.seek(0, os.SEEK_END)  # start at end of file
+        # read all old lines once
+        for line in f:
+            try:
+                msg = ast.literal_eval(line.strip())
+                add_to_history(parse_message(msg))
+            except:
+                continue
 
+        # then keep watching for new lines forever
         while True:
             line = f.readline()
             if not line:
                 await asyncio.sleep(0.1)
                 continue
-
             try:
                 msg = ast.literal_eval(line.strip())
-                parsed = parse_message(msg)
-                yield f"{json.dumps(parsed)}\n\n"
-            except Exception as e:
-                err = {"error": f"Parse failed: {str(e)}", "line": line.strip()}
-                yield f"{json.dumps(err)}\n\n"
+                add_to_history(parse_message(msg))
+            except:
+                continue
+
+async def file_watcher():
+    """Async generator: send all history first, then wait for new ones."""
+    last_index = 0
+    while True:
+        # Send unseen history entries
+        while last_index < len(history):
+            yield f"{json.dumps(history[last_index])}\n\n"
+            last_index += 1
+        await asyncio.sleep(0.1)

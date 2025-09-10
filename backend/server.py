@@ -1,8 +1,10 @@
 from util.Fetchpastrace import get_session_data
-from util.Livetiming import file_watcher
+from util.Livetiming import file_watcher, background_file_reader
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import os
 
 
 app = FastAPI()
@@ -22,10 +24,16 @@ app.add_middleware(
 
 FILE_PATH = "fake_saved_data.txt" # change it to saved_data.txt to read actual data
 
+@app.on_event("startup")
+async def start_background_reader():
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, "w") as f:
+            f.truncate(0)
+    asyncio.create_task(background_file_reader(FILE_PATH))
 
 @app.get("/stream")
 async def stream():
-    return StreamingResponse(file_watcher(FILE_PATH), media_type="text/event-stream")
+    return StreamingResponse(file_watcher(), media_type="text/event-stream")
 
 
 @app.get("/session/laptimes")
