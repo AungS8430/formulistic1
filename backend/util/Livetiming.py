@@ -69,7 +69,8 @@ class RaceData:
                 },
                 "speeds": {},
                 "personal_fastest": False,
-                "catching": None
+                "catching": None,
+                "stints": {}  # Add stints field to store tire compound data
             }
         return self.drivers[car_number]
 
@@ -79,6 +80,8 @@ class RaceData:
 
         if message_type == "TimingData":
             self._update_timing_data(data)
+        elif message_type == "TimingAppData":
+            self._update_timing_app_data(data)  # Add handler for TimingAppData
         elif message_type == "WeatherData":
             self._update_weather_data(data)
         elif message_type == "RaceControlMessages":
@@ -97,6 +100,25 @@ class RaceData:
             self.timing_stats = data
         elif message_type == "SessionInfo":
             self.session["session_info"] = data
+
+    def _update_timing_app_data(self, data: Dict[str, Any]):
+        """Update timing app data including tire compound information."""
+        if "Lines" not in data:
+            return
+
+        for car_number, driver_data in data["Lines"].items():
+            driver_state = self.get_driver_state(car_number)
+
+            # Update tire stints information
+            if "Stints" in driver_data:
+                driver_state["stints"] = driver_data["Stints"]
+
+                # Extract current tire compound from the latest stint
+                latest_stint = max(driver_data["Stints"].keys(), key=int) if driver_data["Stints"] else None
+                if latest_stint and "Compound" in driver_data["Stints"][latest_stint]:
+                    driver_state["current_compound"] = driver_data["Stints"][latest_stint]["Compound"]
+                    driver_state["new_tires"] = driver_data["Stints"][latest_stint].get("New", "false") == "true"
+                    driver_state["tire_laps"] = driver_data["Stints"][latest_stint].get("TotalLaps", 0)
 
     def _update_timing_data(self, data: Dict[str, Any]):
         """Update timing data for drivers."""
