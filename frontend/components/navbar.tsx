@@ -70,7 +70,7 @@ export default function Navbar() {
                   races?.map((race) => (
                     <NavigationMenuLink
                       key={race.name}
-                      href={`/seasons/${currentSeason}/${race.round}`}
+                      href={`/${currentSeason}/${race.round}`}
                     >
                       <span className={race.state == 1 ? "text-neutral-400" : race.state == 0 ? "text-red-thm" : ""}>{race.name}</span>
                       {
@@ -92,7 +92,7 @@ export default function Navbar() {
                   pastSeasons.map((year) => (
                     <NavigationMenuLink
                       key={year}
-                      href={`/seasons/${year}`}
+                      href={`/${year}`}
                     >
                       {year} Season
                     </NavigationMenuLink>
