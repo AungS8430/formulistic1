@@ -73,7 +73,9 @@ requests-cache==1.2.1
 rich==14.1.0
 rich-toolkit==0.15.0
 rignore==0.6.4
+scikit-learn==1.7.2
 scipy==1.16.1
+seaborn==0.13.2
 sentry-sdk==2.35.1
 setuptools==80.9.0
 shellingham==1.5.4
