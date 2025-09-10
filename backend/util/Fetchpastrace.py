@@ -99,7 +99,7 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
     out = ""
     match data:
         case "laptime":
-            out = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" else False)
+            out = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
         case "weather":
             out = weather_process(session)
         case "results":
