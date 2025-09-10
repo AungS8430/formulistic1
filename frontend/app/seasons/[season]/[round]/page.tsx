@@ -8,7 +8,6 @@ import {redirect, RedirectType} from "next/navigation";
 export default function SeasonPage({ params }: { params: Promise<{ season: string, round: string }> }) {
   const { season, round } = use(params)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
-  const [raceResult, setRaceResult] = useState<null | { number: number, position: number, code: string, fname: string, lname: string, team: string, time: string, fastest: boolean, status: string | null }[]>(null)
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -33,26 +32,6 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
         state: (new Date((new Date(row.FirstPractice ? row.FirstPractice.date : row.date)).getDate()) <= today && today <= new Date((new Date(row.date)).getDate()) ? 0 : (today < new Date((new Date(row.FirstPractice ? row.FirstPractice.date : row.date)).getDate()) ? 1 : -1))
       };
       setRace(data)
-      console.log(today)
-    })
-    fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/results`).then((response) => response.json()).then((content) => {
-      if (!content.MRData.RaceTable.Races[0]) setRaceResult(null);
-      else {
-        let data: { number: number, position: number, code: string, fname: string, lname: string, team: string, time: string, fastest: boolean, status: string | null }[] = []
-        content.MRData.RaceTable.Races[0].Results.map((row: any) => {
-          data.push({
-            number: parseInt(row.number),
-            position: parseInt(row.position),
-            code: row.Driver.code,
-            fname: row.Driver.givenName,
-            lname: row.Driver.familyName,
-            team: row.Constructor.name,
-            time: row.Time.time,
-            fastest: row.FastestLap.rank == "1",
-            status: row.Status == "Retired" ? "DNF" : (row.Status == "Did not start" ? "DNS" : null),
-          })
-        })
-      }
     })
   }, [season, round])
 
@@ -83,7 +62,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
             <TableBody className="hover:cursor-pointer">
               {
                 race?.fp1 ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/fp1`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp1`, RedirectType.push)}>
                     <TableCell className="font-semibold">Free Practice 1</TableCell>
                     <TableCell>{race.fp1}</TableCell>
                   </TableRow>
@@ -91,7 +70,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               }
               {
                 race?.fp2 ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/fp2`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp2`, RedirectType.push)}>
                     <TableCell className="font-semibold">Free Practice 2</TableCell>
                     <TableCell>{race.fp2}</TableCell>
                   </TableRow>
@@ -99,7 +78,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               }
               {
                 race?.fp3 ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/fp3`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp3`, RedirectType.push)}>
                     <TableCell className="font-semibold">Free Practice 3</TableCell>
                     <TableCell>{race.fp3}</TableCell>
                   </TableRow>
@@ -107,7 +86,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               }
               {
                 race?.sq ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/sq`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/sq`, RedirectType.push)}>
                     <TableCell className="font-semibold">{parseInt(season) === 2023 ? "Sprint Shootout" : "Sprint Qualifying"}</TableCell>
                     <TableCell>{race.sq}</TableCell>
                   </TableRow>
@@ -115,7 +94,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               }
               {
                 race?.sprint ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/sprint`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/sprint`, RedirectType.push)}>
                     <TableCell className="font-semibold">Sprint</TableCell>
                     <TableCell>{race.sprint}</TableCell>
                   </TableRow>
@@ -123,7 +102,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               }
               {
                 race?.quali ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/quali`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/quali`, RedirectType.push)}>
                     <TableCell className="font-semibold">Qualifying</TableCell>
                     <TableCell>{race.quali}</TableCell>
                   </TableRow>
@@ -131,7 +110,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               }
               {
                 race?.race ? (
-                  <TableRow onClick={() => redirect(`/${season}/${race}/race`)}>
+                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>
                     <TableCell className="font-semibold">Race</TableCell>
                     <TableCell>{race.race}</TableCell>
                   </TableRow>
