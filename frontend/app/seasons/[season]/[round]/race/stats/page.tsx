@@ -171,7 +171,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
         </div>
         <div className="grow" />
         <div className="flex flex-row my-auto">
-          <Button variant="link" onClick={() => redirect(`/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
+          <Button variant="link" onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
           <Select onValueChange={(value) => setMode(value)} defaultValue={mode}>
             <SelectTrigger>
               <SelectValue placeholder="Select mode" />

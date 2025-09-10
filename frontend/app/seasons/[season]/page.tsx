@@ -54,7 +54,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
           <TableBody>
             {
               races?.map((race, index) => (
-                <TableRow key={race.round} onClick={() => redirect(`/${season}/${race.round}`, RedirectType.push)} className={"hover:cursor-pointer"}>
+                <TableRow key={race.round} onClick={() => redirect(`/seasons/${season}/${race.round}`, RedirectType.push)} className={"hover:cursor-pointer"}>
                   <TableCell className={race.state == 0 ? "text-red-thm" : (race.state == 1 ? "text-neutral-400" : "")}>{race.round}</TableCell>
                   <TableCell className={"flex flex-row gap-2 font-semibold" + (race.state == 0 ? " text-red-thm" : (race.state == 1 ? " text-neutral-400" : ""))}>{race.name} {race.state == 0 ? <Badge className="bg-red-thm">Race Weekend</Badge> : <></>}</TableCell>
                   <TableCell className={race.state == 0 ? "text-red-thm" : (race.state == 1 ? "text-neutral-400" : "")}>{race.startDate} - {race.endDate}</TableCell>
