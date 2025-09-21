@@ -33,6 +33,13 @@ async def start_background_reader():
     if os.path.exists(FILE_PATH):
         with open(FILE_PATH, "w") as f:
             f.truncate(0)
+        while True:
+            try:
+                with open(FILE_PATH, "r") as f:
+                    f.read(1)
+                break
+            except Exception:
+                await asyncio.sleep(0.001)
     asyncio.create_task(background_file_reader(FILE_PATH))
 
 @app.get("/stream")
