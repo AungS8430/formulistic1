@@ -4,6 +4,7 @@ import fastf1
 import pandas as pd
 import json
 import datetime
+from fastf1.plotting import get_compound_mapping
 
 
 fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"  # pyright: ignore
@@ -109,4 +110,5 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
             out["TotalLaps"] = total_lap
         case _:
             pass
+    out["Compounds"] = get_compound_mapping(session)
     return json.dumps(out)
