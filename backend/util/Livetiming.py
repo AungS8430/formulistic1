@@ -319,6 +319,46 @@ def add_to_history(msg):
             parsed.get("Timestamp")
         )
 
+async def background_file_reader(filepath: str):
+    """Background task that keeps reading file and updating history."""
+    if not os.path.exists(filepath):
+        return
+
+    with open(filepath, "r") as f:
+        # read all old lines once
+        for line in f:
+            try:
+                msg = ast.literal_eval(line.strip())
+                add_to_history(msg)
+            except:
+                continue
+
+        # then keep watching for new lines forever
+        while True:
+            line = f.readline()
+            if not line:
+                await asyncio.sleep(0.1)
+                continue
+            try:
+                msg = ast.literal_eval(line.strip())
+                add_to_history(msg)
+            except:
+                continue
+
+async def file_watcher(stream_type: str = "structured"):
+    """Async generator: send race data - 'structured' for race data, 'raw' for original format."""
+    last_index = 0
+    while True:
+        if stream_type == "structured":
+            # Send structured race data
+            yield f"data: {json.dumps(race_data.to_dict())}\n\n"
+        else:
+            # Send unseen raw history entries (original behavior)
+            while last_index < len(history):
+                yield f"data: {json.dumps(history[last_index])}\n\n"
+                last_index += 1
+        await asyncio.sleep(0.1)
+
 def get_race_data():
     """Get the full race data as dict."""
     return race_data.to_dict()

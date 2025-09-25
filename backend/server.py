@@ -1,7 +1,7 @@
 from util.Fetchpastrace import get_session_data
 from util.Livetiming import (
     file_watcher, background_file_reader, get_race_data,
-    get_driver_data, get_session_info, get_track_status,
+    get_session_info, get_track_status,
     get_race_control_messages
 )
 from fastapi import FastAPI, Query
@@ -51,11 +51,6 @@ async def stream(format: str = Query("structured", description="Stream format: '
 async def race_data():
     """Get complete structured race data including drivers, session, track status."""
     return get_race_data()
-
-@app.get("/race/drivers")
-async def drivers_data(car_number: str = Query(None, description="Specific car number to get data for")):
-    """Get driver data for all drivers or a specific car number."""
-    return get_driver_data(car_number)
 
 @app.get("/race/session")
 async def session_data():

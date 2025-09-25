@@ -3,7 +3,9 @@
 import { useEffect, useState, useRef } from "react";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 
-interface RaceData {
+// --- Interfaces based on your provided data structure ---
+
+export interface RaceData {
   drivers: Record<string, DriverData> | null;
   session: SessionData | null;
   track: TrackData | null;
@@ -14,7 +16,7 @@ interface RaceData {
   last_updated: string | null;
 }
 
-interface DriverData {
+export interface DriverData {
   car_number: string;
   position: string | null;
   line: number | null;
@@ -26,6 +28,7 @@ interface DriverData {
   in_pit: boolean;
   pit_in?: boolean;
   pit_out?: boolean;
+  pit_in_time?: number | null; // Epoch seconds, accurate pit entry time
   last_pit_time?: number | null;
   status: number | null;
   sectors: Record<string, SectorData>;
@@ -38,12 +41,12 @@ interface DriverData {
   tire_laps: number;
 }
 
-interface SectorData {
+export interface SectorData {
   value: string | null;
   segments: Record<string, { Status: number | null } | null> | null;
 }
 
-interface StintData {
+export interface StintData {
   LapFlags: number;
   Compound: string;
   New: string;
@@ -52,7 +55,7 @@ interface StintData {
   StartLaps: number;
 }
 
-interface SessionData {
+export interface SessionData {
   current_lap: number | null;
   session_status: string | null;
   session_info: SessionInfo | null;
@@ -62,7 +65,7 @@ interface SessionData {
   clock_utc?: string | null;
 }
 
-interface SessionInfo {
+export interface SessionInfo {
   Meeting: {
     Key: number | null;
     Name: string | null;
@@ -93,8 +96,9 @@ interface SessionInfo {
   _kf: boolean | null;
 }
 
-interface TrackData {
+export interface TrackData {
   status: string | null;
+  status_name?: string | null;
   flags: TrackFlag[] | null;
   weather: {
     air_temp: string | null;
@@ -107,7 +111,7 @@ interface TrackData {
   } | null;
 }
 
-interface TrackFlag {
+export interface TrackFlag {
   type: string | null;
   scope: string | null;
   message: string | null;
@@ -115,7 +119,7 @@ interface TrackFlag {
   lap: number | null;
 }
 
-interface RaceControlMessage {
+export interface RaceControlMessage {
   Utc: string | null;
   Lap: number | null;
   Category: string | null;
@@ -125,7 +129,7 @@ interface RaceControlMessage {
   message_id: string | null;
 }
 
-interface TimingStats {
+export interface TimingStats {
   Lines: Record<
     string,
     {
@@ -140,7 +144,7 @@ interface TimingStats {
   > | null;
 }
 
-interface TopThree {
+export interface TopThree {
   Lines: Record<
     string,
     {
@@ -150,6 +154,8 @@ interface TopThree {
   > | null;
 }
 
+// --- Utility for formatting times ---
+
 function formatPitTime(pitTime: number | null | undefined): string {
   if (pitTime === null || pitTime === undefined) return "";
   const min = Math.floor(pitTime / 60);
@@ -158,6 +164,8 @@ function formatPitTime(pitTime: number | null | undefined): string {
   return (min > 0 ? `${min}:` : "") + secStr;
 }
 
+// --- Main Component ---
+
 export default function Live() {
   const [data, setData] = useState<RaceData | null>(null);
   const [driverData, setDriverData] = useState<Record<string, { shortname: string, fullname: string, code: string, team: string, color: string }> | null>(null);
@@ -165,31 +173,25 @@ export default function Live() {
   // Timer for session
   const [liveTimer, setLiveTimer] = useState<string | null>(null);
 
-  // Position change arrows
+  // Position change arrows (with disappear by timestamp)
   const prevPositions = useRef<Record<string, number>>({});
-  const [positionChange, setPositionChange] = useState<Record<string, "up" | "down" | null>>({});
+  const [positionChange, setPositionChange] = useState<Record<string, {dir: "up" | "down", expiresAt: number} | null>>({});
 
-  // Pit timer states per driver
+  // Pit timer states per driver (uses pit_in_time for accuracy)
   const [pitTimers, setPitTimers] = useState<Record<string, { start: number, value: number, paused: boolean, visible: boolean, flash: boolean }>>({});
 
-  // Watch for position changes
+  // Watch for position changes (arrows disappear after 1s, even if tabbed away)
   useEffect(() => {
     if (!data?.drivers) return;
-    const newChange: Record<string, "up" | "down" | null> = { ...positionChange };
+    const newChange: Record<string, {dir: "up" | "down", expiresAt: number} | null> = { ...positionChange };
     Object.entries(data.drivers).forEach(([carNum, driver]) => {
       const pos = driver.position ? parseInt(driver.position) : null;
       const prevPos = prevPositions.current[carNum];
       if (pos !== null && prevPos !== undefined && pos !== prevPos) {
         if (pos < prevPos) {
-          newChange[carNum] = "up";
-          setTimeout(() => {
-            setPositionChange(prev => ({ ...prev, [carNum]: null }));
-          }, 3000);
+          newChange[carNum] = { dir: "up", expiresAt: Date.now() + 1000 };
         } else if (pos > prevPos) {
-          newChange[carNum] = "down";
-          setTimeout(() => {
-            setPositionChange(prev => ({ ...prev, [carNum]: null }));
-          }, 3000);
+          newChange[carNum] = { dir: "down", expiresAt: Date.now() + 1000 };
         }
       }
       prevPositions.current[carNum] = pos ?? prevPos;
@@ -198,18 +200,41 @@ export default function Live() {
     // eslint-disable-next-line
   }, [data?.drivers]);
 
-  // Track pit timer logic
+  // Clear expired arrows (so they never get stuck)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPositionChange(prev => {
+        const now = Date.now();
+        const updated: typeof prev = {};
+        let changed = false;
+        for (const key in prev) {
+          if (prev[key] && prev[key]!.expiresAt > now) {
+            updated[key] = prev[key];
+          } else if (prev[key]) {
+            changed = true;
+            updated[key] = null;
+          }
+        }
+        return changed ? { ...updated } : prev;
+      });
+    }, 150);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Track pit timer logic, using pit_in_time for accurate calculation
   useEffect(() => {
     if (!data?.drivers) return;
     setPitTimers(prev => {
       const timers = { ...prev };
       Object.entries(data.drivers || {}).forEach(([carNum, driver]) => {
-        // Start pit timer when entering pits
+        // Start pit timer when entering pits (use pit_in_time if available)
         if (driver.in_pit) {
+          const now = Math.floor(Date.now() / 1000);
+          const pitInTime = driver.pit_in_time ?? now;
           if (!timers[carNum] || !timers[carNum].visible) {
             timers[carNum] = {
-              start: Date.now(),
-              value: 0,
+              start: pitInTime,
+              value: now - pitInTime,
               paused: false,
               visible: true,
               flash: false,
@@ -217,13 +242,14 @@ export default function Live() {
           } else if (timers[carNum].paused) {
             // Resume timer
             timers[carNum].paused = false;
-            timers[carNum].start = Date.now() - timers[carNum].value * 1000;
+            timers[carNum].start = pitInTime;
           }
         }
         // Pause and flash when exiting pits
         if (!driver.in_pit && timers[carNum]?.visible && !timers[carNum].paused) {
           timers[carNum].paused = true;
-          timers[carNum].value = Math.floor((Date.now() - timers[carNum].start) / 1000);
+          const now = Math.floor(Date.now() / 1000);
+          timers[carNum].value = now - timers[carNum].start;
           timers[carNum].flash = true;
           setTimeout(() => {
             setPitTimers(tprev => {
@@ -247,9 +273,10 @@ export default function Live() {
     const interval = setInterval(() => {
       setPitTimers(prev => {
         const timers = { ...prev };
+        const now = Math.floor(Date.now() / 1000);
         Object.entries(timers).forEach(([carNum, timer]) => {
           if (timer.visible && !timer.paused) {
-            timers[carNum].value = Math.floor((Date.now() - timer.start) / 1000);
+            timers[carNum].value = now - timer.start;
           }
         });
         return timers;
@@ -319,15 +346,17 @@ export default function Live() {
       .then((response) => response.json())
       .then((content) => {
         let drivers: any = {};
-        content.forEach((driver: any) => {
-          drivers[driver.driver_number] = {
-            shortname: driver.broadcast_name,
-            fullname: driver.full_name,
-            code: driver.name_acronym,
-            team: driver.team_name,
-            color: driver.team_colour
-          }
-        })
+        if (Array.isArray(content)) {
+          content.forEach((driver: any) => {
+            drivers[driver.driver_number] = {
+              shortname: driver.broadcast_name,
+              fullname: driver.full_name,
+              code: driver.name_acronym,
+              team: driver.team_name,
+              color: driver.team_colour
+            }
+          })
+        }
         setDriverData(drivers);
       })
   }, [data?.session?.session_info?.Meeting?.Key]);
@@ -352,11 +381,13 @@ export default function Live() {
           </h2>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center">
-          <h2 className="font-semibold text-xl">Flag: {data?.track?.flags?.reverse()?.[0]?.type}</h2>
-          <h2 className="text-xl font-semibold mt-2">
-            Timer: {liveTimer ?? data?.session?.remaining_time ?? "N/A"}
-            {data?.session?.extrapolating === false && <span className="text-red-500 ml-2">Paused</span>}
-          </h2>
+          <h2 className="font-semibold text-xl">Flag: {data?.track?.status_name ?? data?.track?.status}</h2>
+          {liveTimer && (
+            <h2 className="text-xl font-semibold mt-2">
+              Timer: {liveTimer ?? data?.session?.remaining_time ?? "N/A"}
+              {data?.session?.extrapolating === false && <span className="text-red-500 ml-2">Paused</span>}
+            </h2>
+          )}
         </div>
         <div className="flex flex-col text-right w-[33%]">
           <h1 className="text-3xl font-bold">
@@ -400,20 +431,24 @@ export default function Live() {
                     <TableRow key={dnumber}>
                       <TableCell>
                         {driver?.position}
-                        {positionChange[dnumber] === "up" && (
+                        {positionChange[dnumber]?.dir === "up" && (
                           <span style={{
                             color: "green",
                             marginLeft: 4,
+                            fontWeight: "bold",
+                            fontSize: "1.15em",
                             transition: "opacity 0.3s",
-                            opacity: positionChange[dnumber] ? 1 : 0
+                            opacity: 1
                           }}>▲</span>
                         )}
-                        {positionChange[dnumber] === "down" && (
+                        {positionChange[dnumber]?.dir === "down" && (
                           <span style={{
                             color: "red",
                             marginLeft: 4,
+                            fontWeight: "bold",
+                            fontSize: "1.15em",
                             transition: "opacity 0.3s",
-                            opacity: positionChange[dnumber] ? 1 : 0
+                            opacity: 1
                           }}>▼</span>
                         )}
                       </TableCell>
@@ -440,11 +475,11 @@ export default function Live() {
                       <TableCell>{driver?.current_compound}</TableCell>
                       <TableCell>
                         {driver?.stints
-                          ? driver.stints[Math.max(...(Object.keys(driver.stints).map(Number)))].TotalLaps
+                          ? driver.stints[Math.max(...(Object.keys(driver.stints).map(Number)))]?.TotalLaps
                           : ""
                         }
                       </TableCell>
-                      {/* Merged Pit Timer cell */}
+                      {/* Pit Timer cell */}
                       <TableCell>
                         {pitTimers[dnumber]?.visible && (
                           <span
@@ -473,7 +508,7 @@ export default function Live() {
           </Table>
         </div>
         <div className="w-[30%] pr-2">
-          <div className="bg-navbar border-border rounded-xl shadow-xl p-2 h-[49%]">
+          <div className="bg-navbar border-border rounded-xl shadow-xl p-4 h-[49%]">
             <h2 className="font-semibold text-lg sticky top-0 bg-navbar">Race Control</h2>
             <div className="flex flex-col-reverse overflow-scroll h-[calc(100%-2rem)]">
               {
@@ -500,7 +535,6 @@ export default function Live() {
           </div>
         </div>
       </div>
-      {/* Animation styles for pit timer flashing */}
       <style>{`
         @keyframes pit-flash {
           0% { opacity: 1; }

@@ -26,7 +26,7 @@ export default function Navbar() {
   const currentSeason = new Date().getFullYear()
 
   const [races, setRaces] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[]>(null)
-  const [currentRace, setCurrentRace] = useState(null)
+  const [currentRace, setCurrentRace] = useState<null | { round: number, name: string }>(null)
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
@@ -44,7 +44,7 @@ export default function Navbar() {
           endDate: row.date,
           state: (s <= today && today <= e ? 0 : (today < s ? 1 : -1))
         })
-        if (s <= today && today <= e) setCurrentRace(row.raceName);
+        if (s <= today && today <= e) setCurrentRace({ round: row.round, name: row.raceName });
       })
       setRaces(data)
       console.log(today)
@@ -106,7 +106,10 @@ export default function Navbar() {
           {
             currentRace ? (
               <NavigationMenuItem>
-                <Button className="bg-red-thm hover:bg-red-atv">{currentRace}</Button>
+                <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`}>
+                  <Button className="bg-red-thm hover:bg-red-atv">{currentRace.name}</Button>
+                </NavigationMenuLink>
+
               </NavigationMenuItem>
             ) : (
               <></>
