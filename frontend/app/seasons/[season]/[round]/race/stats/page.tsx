@@ -12,13 +12,14 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination"
 import {redirect, RedirectType} from "next/navigation";
+import Compound from "@/components/compound";
 
 export default function PastStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params);
   const [mode, setMode] = useState<string>("Driver")
   const [driver, setDriver] = useState<number | null>(null)
   const [lap, setLap] = useState<number>(1)
-  const [compounds, setCompounds] = useState<null | { [key: string]: string }[]>(null)
+  const [compounds, setCompounds] = useState<null | { [key: string]: { abbreviation: string, color: string } }>(null)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
   const [data, setData] = useState<null | { name: string, dnumber: string, code: string, team: string, color: string, position: number, grid: number | null, time: number | null }[]>(null)
   const [driverData, setDriverData] = useState<null | { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[]>(null)
@@ -74,22 +75,22 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       let dtemp: { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
-      Object.keys(content).forEach(function (key, index) {
+      Object.keys(content["Data"]).forEach(function (key, index) {
         const dx = (data?.filter((d) => d.dnumber == key)[0]) ?? { name: "", code: "" }
         let laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] = [];
-        Object.keys(content[key].Time).forEach(function (lkey, lindex) {
+        Object.keys(content["Data"][key].Time).forEach(function (lkey, lindex) {
           laps.push({
             lap: lkey,
-            laptime: content[key].LapTime[lkey],
-            s1: content[key].Sector1Time[lkey],
-            s2: content[key].Sector2Time[lkey],
-            s3: content[key].Sector3Time[lkey],
-            pitTime: content[key].PitInTime[lkey] ? content[key].PitOutTime[(parseInt(lkey) + 1).toFixed(1)] - content[key].PitInTime[lkey] : null,
-            compound: content[key].Compound[lkey],
-            tyreLife: content[key].TyreLife[lkey],
-            status: content[key].TrackStatus[lkey],
-            position: content[key].Position[lkey],
-            interval: content[key].GapToLeader[lkey],
+            laptime: content["Data"][key].LapTime[lkey],
+            s1: content["Data"][key].Sector1Time[lkey],
+            s2: content["Data"][key].Sector2Time[lkey],
+            s3: content["Data"][key].Sector3Time[lkey],
+            pitTime: content["Data"][key].PitInTime[lkey] ? content["Data"][key].PitOutTime[(parseInt(lkey) + 1).toFixed(1)] - content["Data"][key].PitInTime[lkey] : null,
+            compound: content["Data"][key].Compound[lkey],
+            tyreLife: content["Data"][key].TyreLife[lkey],
+            status: content["Data"][key].TrackStatus[lkey],
+            position: content["Data"][key].Position[lkey],
+            interval: content["Data"][key].GapToLeader[lkey],
           })
         })
         dtemp.push({
@@ -165,6 +166,8 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       setLapData(ltemp);
     }
   }, [driverData]);
+  // @ts-ignore
+  // @ts-ignore
   return (
     <div className="w-full max-h-[calc(100vh-60px)] flex flex-col">
       <div className="flex flex-row w-full p-3">
@@ -224,7 +227,14 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                         <TableCell>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.compound}</TableCell>
+                        <TableCell>
+                          {compounds && compounds[row.compound] && (
+                            <Compound
+                              abbreviation={compounds[row.compound].abbreviation}
+                              color={compounds[row.compound].color}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell>{row.tyreLife}</TableCell>
                         <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
@@ -239,7 +249,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       }
       {
         mode == "Lap-by-Lap" && (
-          <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-2 py-4">
+          <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-2 py-4 mb-5">
             <div className="flex flex-row">
               <Table>
                 <TableHeader>
@@ -266,9 +276,16 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                         <TableCell>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.compound}</TableCell>
+                        <TableCell>
+                          {compounds && compounds[row.compound] && (
+                            <Compound
+                              abbreviation={compounds[row.compound].abbreviation}
+                              color={compounds[row.compound].color}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell>{row.tyreLife}</TableCell>
-                        <TableCell>{row.pitTime}</TableCell>
+                        <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
                       </TableRow>
                     ))
@@ -276,7 +293,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                 </TableBody>
               </Table>
             </div>
-            <div className="sticky bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2">
+            <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2">
               <Pagination>
                 <PaginationContent>
                   {lapData && (
@@ -329,7 +346,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                           const val = Number(e.target.value);
                           if (!isNaN(val) && val >= 1 && val <= (lapData?.length || 1)) setLap(val);
                         }}
-                        className="w-10 font-semibold border rounded px-2 py-1 text-center"
+                        className="w-15 border rounded px-2 py-1 text-center"
                         style={{ MozAppearance: "textfield" }}
                       />
                       {/* Next 5 laps */}
