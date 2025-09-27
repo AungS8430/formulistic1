@@ -117,8 +117,8 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
             }
             for (key, value) in compound_colors.items():
                 out["Compounds"][key] = {
-                    "Color": value,
-                    "Abbreviation": compound_abv[key] if key in compound_abv else key
+                    "color": value,
+                    "abbreviation": compound_abv[key] if key in compound_abv else key
                 }
         case "weather":
             out = weather_process(session)
