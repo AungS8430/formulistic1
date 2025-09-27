@@ -18,6 +18,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
   const [mode, setMode] = useState<string>("Driver")
   const [driver, setDriver] = useState<number | null>(null)
   const [lap, setLap] = useState<number>(1)
+  const [compounds, setCompounds] = useState<null | { [key: string]: string }[]>(null)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
   const [data, setData] = useState<null | { name: string, dnumber: string, code: string, team: string, color: string, position: number, grid: number | null, time: number | null }[]>(null)
   const [driverData, setDriverData] = useState<null | { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[]>(null)
@@ -99,6 +100,8 @@ export default function PastStats({ params }: { params: Promise<{ season: string
         })
       })
       setDriverData(dtemp)
+
+      setCompounds(content["Compounds"])
     })
     fetch(`http://100.125.78.96:1234/session/weatherdata?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))

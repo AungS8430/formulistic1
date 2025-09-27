@@ -110,5 +110,23 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
             out["TotalLaps"] = total_lap
         case _:
             pass
-    out["Compounds"] = get_compound_mapping(session)
+    compound_colors = get_compound_mapping(session)
+    out["Compounds"] = {}
+    compound_abv = {
+        "SOFT": "S",
+        "MEDIUM": "M",
+        "HARD": "H",
+        "INTERMEDIATE": "I",
+        "WET": "W",
+        "DRY": "D",
+        "SUPERSOFT": "SS",
+        "ULTRASOFT": "US",
+        "HYPERSOFT": "HS",
+        "SUPERHARD": "SH",
+    }
+    for (key, value) in compound_colors.items():
+        out["Compounds"][value] = {
+            "Color": value,
+            "Abbreviation": compound_abv[key] if key in compound_abv else key
+        }
     return json.dumps(out)
