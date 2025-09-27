@@ -97,10 +97,29 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
         return json.dumps(["Error", "Data not found"])
     drivers = session.drivers
     total_lap = session.total_laps
-    out = ""
+    out = {}
     match data:
         case "laptime":
-            out = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
+            out["Data"] = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
+            compound_colors = get_compound_mapping(session)
+            out["Compounds"] = {}
+            compound_abv = {
+                "SOFT": "S",
+                "MEDIUM": "M",
+                "HARD": "H",
+                "INTERMEDIATE": "I",
+                "WET": "W",
+                "DRY": "D",
+                "SUPERSOFT": "SS",
+                "ULTRASOFT": "US",
+                "HYPERSOFT": "HS",
+                "SUPERHARD": "SH",
+            }
+            for (key, value) in compound_colors.items():
+                out["Compounds"][key] = {
+                    "Color": value,
+                    "Abbreviation": compound_abv[key] if key in compound_abv else key
+                }
         case "weather":
             out = weather_process(session)
         case "results":
@@ -110,23 +129,5 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
             out["TotalLaps"] = total_lap
         case _:
             pass
-    compound_colors = get_compound_mapping(session)
-    out["Compounds"] = {}
-    compound_abv = {
-        "SOFT": "S",
-        "MEDIUM": "M",
-        "HARD": "H",
-        "INTERMEDIATE": "I",
-        "WET": "W",
-        "DRY": "D",
-        "SUPERSOFT": "SS",
-        "ULTRASOFT": "US",
-        "HYPERSOFT": "HS",
-        "SUPERHARD": "SH",
-    }
-    for (key, value) in compound_colors.items():
-        out["Compounds"][value] = {
-            "Color": value,
-            "Abbreviation": compound_abv[key] if key in compound_abv else key
-        }
+
     return json.dumps(out)
