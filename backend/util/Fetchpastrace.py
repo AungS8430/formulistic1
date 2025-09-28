@@ -53,6 +53,13 @@ def laptime_process(laps: pd.DataFrame, drivers: list[str], total_lap: int, is_r
         out[driver].astype({"LapNumber": "int32"})
         out[driver].set_index("LapNumber", inplace=True)
         out[driver] = out[driver].to_dict()
+        fastest_lap_idx = min(out[driver]["LapTime"], key=out[driver]["LapTime"].get) if "LapTime" in out[driver] and out[driver]["LapTime"] else None
+        out[driver]["Fastest"] = {
+            "Lap": int(fastest_lap_idx) if fastest_lap_idx is not None else None,
+            "s1": min(out[driver]["Sector1Time"], key=out[driver]["Sector1Time"].get) if "Sector1Time" in out[driver] and out[driver]["Sector1Time"] else None,
+            "s2": min(out[driver]["Sector2Time"], key=out[driver]["Sector2Time"].get) if "Sector2Time" in out[driver] and out[driver]["Sector2Time"] else None,
+            "s3": min(out[driver]["Sector3Time"], key=out[driver]["Sector3Time"].get) if "Sector3Time" in out[driver] and out[driver]["Sector3Time"] else None
+        }
     return out
 
 def results_process(results: pd.DataFrame):
@@ -101,6 +108,16 @@ def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["l
     match data:
         case "laptime":
             out["Data"] = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
+            fastest = {}
+            for key in ["Lap", "s1", "s2", "s3"]:
+                def get_time(driver):
+                    idx = out["Data"][driver]["Fastest"][key]
+                    if idx is None:
+                        return float("inf")
+                    return out["Data"][driver]["LapTime" if key == "Lap" else f"Sector{key[1]}Time"].get(idx, float("inf"))
+                fastest_driver = min(drivers, key=get_time, default=None)
+                fastest[key] = fastest_driver
+            out["Fastest"] = fastest
             compound_colors = get_compound_mapping(session)
             out["Compounds"] = {}
             compound_abv = {

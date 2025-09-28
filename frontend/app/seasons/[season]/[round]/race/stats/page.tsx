@@ -166,8 +166,6 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       setLapData(ltemp);
     }
   }, [driverData]);
-  // @ts-ignore
-  // @ts-ignore
   return (
     <div className="w-full max-h-[calc(100vh-60px)] flex flex-col">
       <div className="flex flex-row w-full p-3">
