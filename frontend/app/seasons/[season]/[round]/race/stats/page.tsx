@@ -22,9 +22,10 @@ export default function PastStats({ params }: { params: Promise<{ season: string
   const [compounds, setCompounds] = useState<null | { [key: string]: { abbreviation: string, color: string } }>(null)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
   const [data, setData] = useState<null | { name: string, dnumber: string, code: string, team: string, color: string, position: number, grid: number | null, time: number | null }[]>(null)
-  const [driverData, setDriverData] = useState<null | { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[]>(null)
+  const [driverData, setDriverData] = useState<null | { name: string, dnumber: number, code: string, fastest: { lap: number, s1: number, s2: number, s3: number }, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[]>(null)
   const [lapData, setLapData] = useState<null | { lap: string, drivers: { name: string, dnumber: number, code: string, position: number | null, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, interval: number }[] }[]>(null)
   const [weather, setWeather] = useState<null | { lap: string, airTemp: number, trackTemp: number, humidity: number, pressure: number, rain: boolean, windSpeed: number, windDir: number }[]>(null)
+  const [fastest, setFastest] = useState<null | { lap: string, s1: string, s2: string, s3: string }>(null)
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -74,7 +75,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
     fetch(`http://100.125.78.96:1234/session/laptimes?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
-      let dtemp: { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
+      let dtemp: { name: string, dnumber: number, code: string, fastest: { lap: number, s1: number, s2: number, s3: number }, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
       Object.keys(content["Data"]).forEach(function (key, index) {
         const dx = (data?.filter((d) => d.dnumber == key)[0]) ?? { name: "", code: "" }
         let laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] = [];
@@ -97,12 +98,15 @@ export default function PastStats({ params }: { params: Promise<{ season: string
           name: dx.name,
           dnumber: parseInt(key),
           code: dx.code,
+          fastest: content["Data"][key]["Fastest"] ?? { lap: 0, s1: 0, s2: 0, s3: 0 },
           laps: laps
         })
       })
       setDriverData(dtemp)
-
+      setFastest(content["Fastest"])
       setCompounds(content["Compounds"])
+
+      console.log(dtemp)
     })
     fetch(`http://100.125.78.96:1234/session/weatherdata?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
@@ -175,7 +179,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
         </div>
         <div className="grow" />
         <div className="flex flex-row my-auto">
-          <Button variant="link" onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
+          <Button variant="link" className="hover:cursor-pointer" onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
           <Select onValueChange={(value) => setMode(value)} defaultValue={mode}>
             <SelectTrigger>
               <SelectValue placeholder="Select mode" />
@@ -221,10 +225,10 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                       <TableRow key={row.lap}>
                         <TableCell>{parseInt(row.lap)}</TableCell>
                         <TableCell>{row.position}</TableCell>
-                        <TableCell>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.lap == parseInt(row.lap) ? (parseInt(fastest?.lap || "0") == driver ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s1 == parseInt(row.lap) ? parseInt(fastest?.s1 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s2 == parseInt(row.lap) ? parseInt(fastest?.s2 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s3 == parseInt(row.lap) ? parseInt(fastest?.s3 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>
                           {compounds && compounds[row.compound] && (
                             <Compound
@@ -270,10 +274,10 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                       <TableRow key={row.dnumber}>
                         <TableCell>{row.position}</TableCell>
                         <TableCell className="font-semibold" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>{row.dnumber} {(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</TableCell>
-                        <TableCell>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.lap == lap ? (parseInt(fastest?.lap || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s1 == lap ? (parseInt(fastest?.s1 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s2 == lap ? (parseInt(fastest?.s2 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s3 == lap ? (parseInt(fastest?.s3 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>
                           {compounds && compounds[row.compound] && (
                             <Compound
