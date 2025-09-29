@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/pagination"
 import {redirect, RedirectType} from "next/navigation";
 import Compound from "@/components/compound";
+import Weather from "@/components/weather";
 
 export default function PastStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params);
@@ -111,20 +112,16 @@ export default function PastStats({ params }: { params: Promise<{ season: string
     fetch(`http://100.125.78.96:1234/session/weatherdata?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
-      let tmp: { lap: string, airTemp: number, trackTemp: number, humidity: number, pressure: number, rain: boolean, windSpeed: number, windDir: number }[] = [];
-
-      Object.keys(content).forEach(function (key, index)  {
-        tmp.push({
-          lap: key,
-          airTemp: content.AirTemp[key],
-          trackTemp: content.TrackTemp[key],
-          humidity: content.Humidity[key],
-          pressure: content.Pressure[key],
-          rain: content.Rainfall[key],
-          windSpeed: content.WindSpeed[key],
-          windDir: content.WindDirection[key],
-        })
-      })
+      const tmp = Object.keys(content.index).map((key) => ({
+        lap: key,
+        airTemp: Math.round(content.AirTemp[key]),
+        trackTemp: Math.round(content.TrackTemp[key]),
+        humidity: Math.round(content.Humidity[key]),
+        pressure: Math.round(content.Pressure[key]),
+        rain: content.Rainfall[key],
+        windSpeed: Math.round(content.WindSpeed[key]),
+        windDir: Math.round(content.WindDirection[key]),
+      }));
 
       setWeather(tmp)
     })
@@ -251,150 +248,165 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       }
       {
         mode == "Lap-by-Lap" && (
-          <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-2 py-4 mb-5">
-            <div className="flex flex-row">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Pos.</TableHead>
-                    <TableHead>Driver</TableHead>
-                    <TableHead>Laptime</TableHead>
-                    <TableHead>Sector 1</TableHead>
-                    <TableHead>Sector 2</TableHead>
-                    <TableHead>Sector 3</TableHead>
-                    <TableHead>Compound</TableHead>
-                    <TableHead>Tyre Life</TableHead>
-                    <TableHead>Pit Time</TableHead>
-                    <TableHead>Interval</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {
-                    lapData?.filter(l => parseInt(l.lap) == lap)[0]?.drivers.map((row) => (
-                      <TableRow key={row.dnumber}>
-                        <TableCell>{row.position}</TableCell>
-                        <TableCell className="font-semibold" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>{row.dnumber} {(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.lap == lap ? (parseInt(fastest?.lap || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s1 == lap ? (parseInt(fastest?.s1 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s2 == lap ? (parseInt(fastest?.s2 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s3 == lap ? (parseInt(fastest?.s3 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>
-                          {compounds && compounds[row.compound] && (
-                            <Compound
-                              abbreviation={compounds[row.compound].abbreviation}
-                              color={compounds[row.compound].color}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>{row.tyreLife}</TableCell>
-                        <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
+          <div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 p-4 pr-0 bg-navbar shadow-xl rounded-l-[calc(var(--spacing)*14)] border">
+              { weather &&
+                ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
+                                    humidity={weather[lap].humidity} pressure={weather[lap].pressure}
+                                    rain={weather[lap].rain} windSpeed={weather[lap].windSpeed} windDir={weather[lap].windDir}/>
+                    : <Weather airTemp={weather[weather.length - 1].airTemp} trackTemp={weather[weather.length - 1].trackTemp}
+                               humidity={weather[weather.length - 1].humidity} pressure={weather[weather.length - 1].pressure}
+                                rain={weather[weather.length - 1].rain} windSpeed={weather[weather.length - 1].windSpeed} windDir={weather[weather.length - 1].windDir}/>
+                )
+              }
             </div>
-            <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2">
-              <Pagination>
-                <PaginationContent>
-                  {lapData && (
-                    <>
-                      {/* First Lap */}
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => setLap(1)}
-                          isActive={lap === 1}
-                          style={{ cursor: lap === 1 ? "default" : "pointer" }}
-                        >
-                          &#171;
-                        </PaginationLink>
-                      </PaginationItem>
-                      {/* Previous Lap */}
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => setLap(Math.max(1, lap - 1))}
-                          isActive={false}
-                          style={{ cursor: lap === 1 ? "default" : "pointer" }}
-                        >
-                          &#8249;
-                        </PaginationLink>
-                      </PaginationItem>
-                      {/* Previous 5 laps */}
-                      {lap > 6 && (
+
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] p-2 pt-4 pr-32">
+              <div className="flex flex-row">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pos.</TableHead>
+                      <TableHead>Driver</TableHead>
+                      <TableHead>Laptime</TableHead>
+                      <TableHead>Sector 1</TableHead>
+                      <TableHead>Sector 2</TableHead>
+                      <TableHead>Sector 3</TableHead>
+                      <TableHead>Compound</TableHead>
+                      <TableHead>Tyre Life</TableHead>
+                      <TableHead>Pit Time</TableHead>
+                      <TableHead>Interval</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {
+                      lapData?.filter(l => parseInt(l.lap) == lap)[0]?.drivers.map((row) => (
+                        <TableRow key={row.dnumber}>
+                          <TableCell>{row.position}</TableCell>
+                          <TableCell className="font-semibold" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>{row.dnumber} {(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.lap == lap ? (parseInt(fastest?.lap || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s1 == lap ? (parseInt(fastest?.s1 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s2 == lap ? (parseInt(fastest?.s2 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s3 == lap ? (parseInt(fastest?.s3 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell>
+                            {compounds && compounds[row.compound] && (
+                              <Compound
+                                abbreviation={compounds[row.compound].abbreviation}
+                                color={compounds[row.compound].color}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>{row.tyreLife}</TableCell>
+                          <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
+                        </TableRow>
+                      ))
+                    }
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2">
+                <Pagination>
+                  <PaginationContent>
+                    {lapData && (
+                      <>
+                        {/* First Lap */}
                         <PaginationItem>
-                          <PaginationEllipsis />
+                          <PaginationLink
+                            onClick={() => setLap(1)}
+                            isActive={lap === 1}
+                            style={{ cursor: lap === 1 ? "default" : "pointer" }}
+                          >
+                            &#171;
+                          </PaginationLink>
                         </PaginationItem>
-                      )}
-                      {lapData
-                        .filter((d) => {
-                          const l = parseInt(d.lap);
-                          return l >= Math.max(1, lap - 5) && l < lap;
-                        })
-                        .map((d) => (
-                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
-                            <PaginationLink isActive={parseInt(d.lap) == lap}>
-                              {parseInt(d.lap)}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-                      {/* Current lap */}
-                      <input
-                        type="number"
-                        min={1}
-                        max={lapData?.length || 1}
-                        value={lap}
-                        onChange={e => {
-                          const val = Number(e.target.value);
-                          if (!isNaN(val) && val >= 1 && val <= (lapData?.length || 1)) setLap(val);
-                        }}
-                        className="w-15 border rounded px-2 py-1 text-center"
-                        style={{ MozAppearance: "textfield" }}
-                      />
-                      {/* Next 5 laps */}
-                      {lapData
-                        .filter((d) => {
-                          const l = parseInt(d.lap);
-                          return l > lap && l <= lap + 5;
-                        })
-                        .map((d) => (
-                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
-                            <PaginationLink isActive={parseInt(d.lap) == lap}>
-                              {parseInt(d.lap)}
-                            </PaginationLink>
-                          </PaginationItem>
-                        ))}
-                      {lap < (lapData?.length || 0) - 5 && (
+                        {/* Previous Lap */}
                         <PaginationItem>
-                          <PaginationEllipsis />
+                          <PaginationLink
+                            onClick={() => setLap(Math.max(1, lap - 1))}
+                            isActive={false}
+                            style={{ cursor: lap === 1 ? "default" : "pointer" }}
+                          >
+                            &#8249;
+                          </PaginationLink>
                         </PaginationItem>
-                      )}
-                      {/* Next Lap */}
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => setLap(Math.min(lap + 1, lapData?.length || 1))}
-                          isActive={false}
-                          style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
-                        >
-                          &#8250;
-                        </PaginationLink>
-                      </PaginationItem>
-                      {/* Last Lap */}
-                      <PaginationItem>
-                        <PaginationLink
-                          onClick={() => setLap(lapData?.length || 1)}
-                          isActive={lap === (lapData?.length || 1)}
-                          style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
-                        >
-                          &#187;
-                        </PaginationLink>
-                      </PaginationItem>
-                    </>
-                  )}
-                </PaginationContent>
-              </Pagination>
+                        {/* Previous 5 laps */}
+                        {lap > 6 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        {lapData
+                          .filter((d) => {
+                            const l = parseInt(d.lap);
+                            return l >= Math.max(1, lap - 5) && l < lap;
+                          })
+                          .map((d) => (
+                            <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
+                              <PaginationLink isActive={parseInt(d.lap) == lap}>
+                                {parseInt(d.lap)}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+                        {/* Current lap */}
+                        <input
+                          type="number"
+                          min={1}
+                          max={lapData?.length || 1}
+                          value={lap}
+                          onChange={e => {
+                            const val = Number(e.target.value);
+                            if (!isNaN(val) && val >= 1 && val <= (lapData?.length || 1)) setLap(val);
+                          }}
+                          className="w-15 border rounded px-2 py-1 text-center"
+                          style={{ MozAppearance: "textfield" }}
+                        />
+                        {/* Next 5 laps */}
+                        {lapData
+                          .filter((d) => {
+                            const l = parseInt(d.lap);
+                            return l > lap && l <= lap + 5;
+                          })
+                          .map((d) => (
+                            <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
+                              <PaginationLink isActive={parseInt(d.lap) == lap}>
+                                {parseInt(d.lap)}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+                        {lap < (lapData?.length || 0) - 5 && (
+                          <PaginationItem>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        )}
+                        {/* Next Lap */}
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setLap(Math.min(lap + 1, lapData?.length || 1))}
+                            isActive={false}
+                            style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
+                          >
+                            &#8250;
+                          </PaginationLink>
+                        </PaginationItem>
+                        {/* Last Lap */}
+                        <PaginationItem>
+                          <PaginationLink
+                            onClick={() => setLap(lapData?.length || 1)}
+                            isActive={lap === (lapData?.length || 1)}
+                            style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
+                          >
+                            &#187;
+                          </PaginationLink>
+                        </PaginationItem>
+                      </>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              </div>
             </div>
           </div>
+
         )
       }
     </div>
