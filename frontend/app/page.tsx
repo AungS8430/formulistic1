@@ -19,7 +19,7 @@ export default function Home() {
   today.setUTCHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`https://api.jolpi.ca/ergast/f1/${currentSeason}/races/`).then((response) => response.json()).then((content) => {
+    fetch(`http://100.125.78.96:1234/season/schedule?year=${currentSeason}`).then((response) => response.json()).then((content) => {
       content.MRData.RaceTable.Races.map((row: any) => {
         const s = new Date(row.FirstPractice ? row.FirstPractice.date : row.date);
         const e = new Date(row.date);

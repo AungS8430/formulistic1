@@ -13,18 +13,27 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
   today.setUTCHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`https://api.jolpi.ca/ergast/f1/${season}/races/`).then((response) => response.json()).then((content) => {
+    fetch(`http://100.125.78.96:1234/season/schedule?year=${season}`).then((response) => response.json()).then((content) => {
       let data: { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[] = [];
-      content.MRData.RaceTable.Races.map((row: any) => {
-        const s = new Date(row.FirstPractice ? new Date(row.FirstPractice.date + "T" + (row.FirstPractice.time ? row.FirstPractice.time : "00:00:00Z")) : new Date(row.date + "T" + (row.time ? row.time : "00:00:00Z")));
-        const e = new Date(row.date + "T" + (row.time ? row.time : "00:00:00Z"));
+      console.log(content)
+      content.map((row: any) => {
+        const startDateTime = row.FirstPractice
+          ? (row.FirstPractice.date.includes("T")
+              ? new Date(row.FirstPractice.date + (row.FirstPractice.time ? "" : "T00:00:00Z"))
+              : new Date(row.FirstPractice.date + "T" + (row.FirstPractice.time ? row.FirstPractice.time : "00:00:00Z")))
+          : (row.date.includes("T")
+              ? new Date(row.date + (row.time ? "" : "T00:00:00Z"))
+              : new Date(row.date + "T" + (row.time ? row.time : "00:00:00Z")));
+        const endDateTime = row.date.includes("T")
+          ? new Date(row.date + (row.time ? "" : "T00:00:00Z"))
+          : new Date(row.date + "T" + (row.time ? row.time : "00:00:00Z"));
         data.push({
           round: row.round,
           name: row.raceName,
           circuit: row.Circuit.circuitName,
-          startDate: s.toLocaleDateString(),
-          endDate: e.toLocaleDateString(),
-          state: (s <= today && today <= e ? 0 : (today < s ? 1 : -1))
+          startDate: startDateTime.toLocaleDateString(),
+          endDate: endDateTime.toLocaleDateString(),
+          state: (startDateTime <= today && today <= endDateTime ? 0 : (today < startDateTime ? 1 : -1))
         })
       })
       setRaces(data)

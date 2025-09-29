@@ -32,9 +32,9 @@ export default function Navbar() {
   today.setUTCHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`https://api.jolpi.ca/ergast/f1/${currentSeason}/races/`).then((response) => response.json()).then((content) => {
+    fetch(`http://100.125.78.96:1234/season/schedule?year=${currentSeason}`).then((response) => response.json()).then((content) => {
       let data: { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[] = [];
-      content.MRData.RaceTable.Races.map((row: any) => {
+      content.map((row: any) => {
         const s = new Date(row.FirstPractice ? row.FirstPractice.date : row.date);
         const e = new Date(row.date);
         data.push({
