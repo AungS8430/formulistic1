@@ -1,8 +1,6 @@
-from functools import cache
 import fastf1
 
 
-@cache
 def get_session(year: int ,gp: str|int, session_type: str):
     if type(gp) is not int and gp.isdigit():  # pyright: ignore
         get_gp = int(gp)
