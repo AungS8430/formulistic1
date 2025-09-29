@@ -1,4 +1,4 @@
-from util.Fetchpastrace import get_session_data
+from util.pastCache import data
 from util.Livetiming import (
     file_watcher, background_file_reader, get_race_data,
     get_session_info, get_track_status,
@@ -75,19 +75,19 @@ async def race_messages(limit: int = Query(10, ge=1, le=50, description="Number 
 
 @app.get("/session/laptimes")
 async def session_laptimes(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "laptime")
+    return data.pass_data(year, gp, session, "laptime")
 
 
 @app.get("/session/weatherdata")
 async def session_weatherdata(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "weather")
+    return data.pass_data(year, gp, session, "weather")
 
 
 @app.get("/session/results")
 async def session_results(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "results")
+    return data.pass_data(year, gp, session, "results")
 
 
 @app.get("/session/info")
 async def session_info(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "info")
+    return data.pass_data(year, gp, session, "info")
