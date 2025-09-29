@@ -232,7 +232,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                 ))}
               </div>
             </div>
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-4">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-4 xl:max-w-5xl mx-auto">
               <h3 className="font-semibold text-lg">{ data?.filter((d) => parseInt(d.dnumber) == driver)[0].name }'s data</h3>
               <Table>
                 <TableHeader>
@@ -294,7 +294,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
               }
             </div>
 
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-160px)] p-4 pr-32">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-160px)] p-4 max-w-[calc(100vw-120px)] xl:max-w-auto xl:mr-auto xl:max-w-5xl xl:mx-auto">
               <div className="flex flex-row">
                 <Table>
                   <TableHeader>
