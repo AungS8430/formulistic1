@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 
 import { Anton } from "next/font/google"
 import {useEffect, useState} from "react";
+import Link from "next/link";
 
 const anton = Anton({
   subsets: ["latin"],
@@ -52,12 +53,14 @@ export default function Navbar() {
 
   }, [currentSeason])
   const pastSeasons = Array.from(
-    { length: 10 },
+    { length: currentSeason - 2018 },
     (_, i) => currentSeason - i - 1
   )
   return (
     <div className="flex p-1 bg-navbar shadow-md relative z-50">
-      <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
+      <Link href="/">
+        <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0 cursor-pointer"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
+      </Link>
       <div className="grow" />
       <NavigationMenu viewport={false}>
         <NavigationMenuList>
@@ -98,9 +101,7 @@ export default function Navbar() {
                     </NavigationMenuLink>
                   ))
                 }
-                <NavigationMenuLink href="/seasons">All Seasons</NavigationMenuLink>
               </div>
-
             </NavigationMenuContent>
           </NavigationMenuItem>
           {

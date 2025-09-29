@@ -190,8 +190,8 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       </div>
       {
         mode == "Driver" && (
-          <div className="flex flex-row w-full">
-            <div className="flex flex-col w-3xs bg-navbar shadow-xl p-4">
+          <div className="flex flex-row w-full overflow-y-hidden">
+            <div className="flex flex-col w-3xs bg-navbar shadow-xl p-4 rounded-r-xl border-t border-b border-r">
               <h3 className="font-semibold text-md text-center">Drivers</h3>
               <div className="flex flex-col overflow-y-auto shrink h-[calc(100vh-200px)]">
                 { data?.map((d) => (
@@ -199,7 +199,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                 ))}
               </div>
             </div>
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] p-2 py-4">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-4">
               <h3 className="font-semibold text-lg">{ data?.filter((d) => parseInt(d.dnumber) == driver)[0].name }'s data</h3>
               <Table>
                 <TableHeader>
@@ -248,7 +248,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       }
       {
         mode == "Lap-by-Lap" && (
-          <div>
+          <div className="overflow-y-hidden">
             <div className="absolute right-0 top-1/2 -translate-y-1/2 p-4 pr-0 bg-navbar shadow-xl rounded-l-[calc(var(--spacing)*14)] border">
               { weather &&
                 ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
@@ -261,7 +261,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
               }
             </div>
 
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] p-2 pt-4 pr-32">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-160px)] p-4 pr-32">
               <div className="flex flex-row">
                 <Table>
                   <TableHeader>
@@ -305,7 +305,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                   </TableBody>
                 </Table>
               </div>
-              <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2">
+              <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2 pb-0">
                 <Pagination>
                   <PaginationContent>
                     {lapData && (
