@@ -1,12 +1,12 @@
 from typing import Literal
 from .races import get_session
 import fastf1
+from fastf1.ergast import Ergast
 import pandas as pd
 import datetime
 from fastf1.plotting import get_compound_mapping
 
-
-fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"  # pyright: ignore
+ergast = Ergast(result_type="raw")
 
 
 laptime_var_selections = ["DriverNumber", "LapNumber", "Compound", "TyreLife", "TrackStatus", "Position", "Deleted"]
@@ -86,15 +86,12 @@ def weather_process(data: fastf1.core.Session): # pyright: ignore
     out = out.to_dict()
     return out
 
-def info_process(info: dict, total_lap):
-    raw_info = info.copy()
-    for idx, itr in raw_info.items():
-        if type(itr) == datetime.timedelta:
-            info[idx] = itr.seconds / 3600
-        if type(itr) == datetime.datetime:
-            info[idx] = itr.strftime("%Y-%m-%d %H:%M:%S")
-    info["TotalLaps"] = total_lap
-    return info
+def info_process(season: int, gp: int):
+    data = ergast.get_race_schedule(season, gp)
+    if len(data) == 0 or data is None:
+        return {}
+    print(data)
+    return data[0]
 
 def get_session_data(year: int ,gp: str|int, session_type: str):
     session = get_session(year, gp, session_type)
@@ -108,7 +105,7 @@ def get_session_data(year: int ,gp: str|int, session_type: str):
     out = {"laptime":{},
         "weather" : weather_process(session),
         "results" : results_process(session.results),
-        "info" : info_process(session.session_info, total_lap)
+        "info" : info_process(year, gp)
     }
 
     out["laptime"]["Data"] = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)

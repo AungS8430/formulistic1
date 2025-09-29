@@ -30,7 +30,7 @@ class data():
         if data == ["Error", "Data not found"]:
             return ["Error", "Data not found"]
         with open(path, "w", encoding="utf-8") as file:
-            file.write(json.dumps(data))
+            file.write(json.dumps(data, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else o.isoformat() if hasattr(o, "isoformat") else str(o)))
         cls.sessions[str(formated)] = data
         return "success"
 
@@ -57,4 +57,4 @@ class data():
         out = cls.get_data(year, gp, session_type)
         if out != ["Error", "Data not found"]:
             out = out[data] # pyright: ignore
-        return json.dumps(out)
+        return json.dumps(out, default=lambda o: o.__dict__ if hasattr(o, "__dict__") else o.isoformat() if hasattr(o, "isoformat") else str(o))
