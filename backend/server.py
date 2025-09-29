@@ -7,11 +7,31 @@ from util.Livetiming import (
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import asyncio
 import os
 
 
-app = FastAPI()
+FILE_PATH = "fake_saved_data.txt" # change it to saved_data.txt to read actual data
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, "w") as f:
+            f.truncate(0)
+        while True:
+            try:
+                with open(FILE_PATH, "r") as f:
+                    f.read(1)
+                break
+            except Exception:
+                await asyncio.sleep(0.001)
+    asyncio.create_task(background_file_reader(FILE_PATH))
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 origins = [
@@ -26,21 +46,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-FILE_PATH = "fake_saved_data.txt" # change it to saved_data.txt to read actual data
-
-@app.on_event("startup")
-async def start_background_reader():
-    if os.path.exists(FILE_PATH):
-        with open(FILE_PATH, "w") as f:
-            f.truncate(0)
-        while True:
-            try:
-                with open(FILE_PATH, "r") as f:
-                    f.read(1)
-                break
-            except Exception:
-                await asyncio.sleep(0.001)
-    asyncio.create_task(background_file_reader(FILE_PATH))
 
 @app.get("/stream")
 async def stream(format: str = Query("structured", description="Stream format: 'structured' for race data, 'raw' for original messages")):
