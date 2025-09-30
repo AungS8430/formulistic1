@@ -5,6 +5,7 @@ import { motion } from "motion/react"
 import { Anton } from "next/font/google";
 import {useEffect, useState} from "react";
 import {Button} from "@/components/ui/button";
+import Link from "next/link";
 
 const anton = Anton({
   subsets: ["latin"],
@@ -14,7 +15,7 @@ const anton = Anton({
 
 export default function Home() {
   const currentSeason = new Date().getFullYear()
-  const [currentRace, setCurrentRace] = useState(null)
+  const [currentRace, setCurrentRace] = useState<null | { round: number, name: string }>(null)
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
@@ -23,7 +24,7 @@ export default function Home() {
       content.map((row: any) => {
         const s = new Date(row.FirstPractice ? row.FirstPractice.date : row.date);
         const e = new Date(row.date);
-        if (s <= today && today <= e) setCurrentRace(row.raceName);
+        if (s <= today && today <= e) setCurrentRace({ round: row.round, name: row.raceName });
       })
     })
 
@@ -50,13 +51,18 @@ export default function Home() {
         animate={{ opacity: 1, transition: { duration: 1, delay: 1 }}}
         className="absolute top-1/2 bottom-1/2 -translate-y-1/2 mt-14 flex flex-col sm:flex-row gap-1 sm:gap-2"
       >
-        <Button variant="outline" className="text-neutral-300 hover:cursor-pointer">
-          {currentSeason} Season
+        <Button variant="outline" className="text-neutral-300 hover:cursor-pointer" asChild>
+          <Link href={`/seasons/${currentSeason}`}>
+            View {currentSeason} Season
+          </Link>
         </Button>
         {
           currentRace && (
-            <Button className="bg-red-thm hover:bg-red-atv hover:cursor-pointer">
-              {currentRace}
+            <Button className="bg-red-thm hover:bg-red-atv hover:cursor-pointer" asChild>
+              <Link href={`/seasons/${currentSeason}/${currentRace.round}`}>
+                {currentRace.name} - Round {currentRace.round}
+              </Link>
+
             </Button>
           )
         }
