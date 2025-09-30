@@ -84,7 +84,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       };
       setRace(temp)
     })
-    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=s`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       let temp: { name: string, dnumber: string, code: string, team: string, color: string, position: number, grid: number | null, time: number | null }[] = [];
@@ -106,7 +106,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       setData(temp)
       setDriver(parseInt(temp[0].dnumber))
     })
-    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/laptimes?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/laptimes?year=${season}&gp=${round}&session=s`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       let dtemp: { name: string, dnumber: number, code: string, fastest: { lap: number, s1: number, s2: number, s3: number }, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
