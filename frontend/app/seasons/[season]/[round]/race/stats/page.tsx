@@ -32,7 +32,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
   today.setHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`http://100.125.78.96:1234/session/info?year=${season}&gp=${round}`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/info?year=${season}&gp=${round}`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content)
       let temp: { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number } = {
         round: parseInt(content.round ?? content.Round ?? content.roundNumber ?? "0"),
@@ -84,7 +84,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       };
       setRace(temp)
     })
-    fetch(`http://100.125.78.96:1234/session/results?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       let temp: { name: string, dnumber: string, code: string, team: string, color: string, position: number, grid: number | null, time: number | null }[] = [];
@@ -106,7 +106,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       setData(temp)
       setDriver(parseInt(temp[0].dnumber))
     })
-    fetch(`http://100.125.78.96:1234/session/laptimes?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/laptimes?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       let dtemp: { name: string, dnumber: number, code: string, fastest: { lap: number, s1: number, s2: number, s3: number }, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
@@ -142,7 +142,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
 
       console.log(dtemp)
     })
-    fetch(`http://100.125.78.96:1234/session/weatherdata?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/weatherdata?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       const tmp = Object.keys(content.index).map((key) => ({
@@ -202,7 +202,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
   }, [driverData]);
   return (
     <div className="w-full max-h-[calc(100vh-44px)] flex flex-col">
-      <div className="flex flex-row w-full p-3">
+      <div className="flex flex-row w-full px-3 pb-3">
         <div className="flex flex-col">
           <h1 className="text-3xl font-bold">{race?.name}</h1>
           <h2 className="text-neutral-400">{race?.startDate} - {race?.endDate} · {race?.circuit}</h2>
@@ -232,7 +232,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                 ))}
               </div>
             </div>
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-4 xl:max-w-5xl mx-auto">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-132px)] p-4 xl:max-w-5xl mx-auto">
               <h3 className="font-semibold text-lg">{ data?.filter((d) => parseInt(d.dnumber) == driver)[0].name }'s data</h3>
               <Table>
                 <TableHeader>
@@ -282,7 +282,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       {
         mode == "Lap-by-Lap" && (
           <div className="overflow-y-hidden flex flex-row">
-            <div className="flex flex-row w-full">
+            <div className="flex flex-row w-full gap-2">
               <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex flex-row py-2">
                 <Table>
                   <TableHeader>

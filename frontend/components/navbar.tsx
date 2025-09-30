@@ -32,7 +32,7 @@ export default function Navbar() {
   today.setUTCHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`http://100.125.78.96:1234/season/schedule?year=${currentSeason}`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/season/schedule?year=${currentSeason}`).then((response) => response.json()).then((content) => {
       let data: { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[] = [];
       content.map((row: any) => {
         const s = new Date(row.FirstPractice ? row.FirstPractice.date : row.date);

@@ -13,7 +13,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
   today.setUTCHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`http://100.125.78.96:1234/season/schedule?year=${season}`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/season/schedule?year=${season}`).then((response) => response.json()).then((content) => {
       let data: { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[] = [];
       console.log(content)
       content.map((row: any) => {
