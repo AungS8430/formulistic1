@@ -363,7 +363,7 @@ export default function Live() {
 
   return (
     <div className="w-full max-h-[calc(100vh-60px)] flex flex-col overflow-hidden justify-between">
-      <div className="flex flex-row p-4">
+      <div className="flex flex-col sm:flex-row p-4">
         <div className="flex flex-col w-[33%]">
           <h1 className="text-3xl font-bold">
             {data?.session?.session_name ?? data?.session?.session_info?.Name ?? data?.session?.session_info?.Type}
@@ -399,9 +399,9 @@ export default function Live() {
           </h2>
         </div>
       </div>
-      <div className="flex flex-row h-[calc(100vh-70px)]">
-        <div className="flex flex-row p-4 pt-0 overflow-scroll w-[70%] max-h-[calc(100vh-120px)]">
-          <Table>
+      <div className="flex flex-col sm:flex-row h-[calc(100vh-70px)]">
+        <div className="flex flex-col sm:flex-row p-4 pt-0 overflow-scroll w-[70%] max-h-[calc(100vh-120px)] overflow-x-auto">
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Pos.</TableHead>

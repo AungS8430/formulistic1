@@ -25,7 +25,7 @@ export default function Comound({ abbreviation, color }: { abbreviation: string;
   const rightArc = arcPath(cx, cy, r, 30, 150);
 
   return (
-    <svg viewBox="0 0 256 256" className="w-6 h-6" fill="none">
+    <svg viewBox="0 0 256 256" className="w-4 h-4 md:w-6 md:h-6" fill="none">
       {/* Left red arc */}
       <path
         d={leftArc}
