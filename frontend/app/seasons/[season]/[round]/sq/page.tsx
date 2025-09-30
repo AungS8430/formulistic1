@@ -1,13 +1,14 @@
 "use client";
 
-import {use, useEffect, useState} from "react";
+import { useState, useEffect, use } from "react";
 import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
-import {redirect, RedirectType} from "next/navigation";
 
-export default function SeasonPage({ params }: { params: Promise<{ season: string, round: string }> }) {
+
+export default function QualiStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
+  const [data, setData] = useState<null | { name: string, dnumber: string, team: string, color: string, position: number, q1: number | null, q2: number | null, q3: number | null }[]>(null)
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -36,11 +37,11 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
           : null,
         sq: season == "2023"
           ? (content.SprintShootout?.date && content.SprintShootout?.time
-              ? new Date(`${content.SprintShootout.date.split("T")[0]}T${content.SprintShootout.time}`).toLocaleString()
-              : null)
+            ? new Date(`${content.SprintShootout.date.split("T")[0]}T${content.SprintShootout.time}`).toLocaleString()
+            : null)
           : (content.SprintQualifying?.date && content.SprintQualifying?.time
-              ? new Date(`${content.SprintQualifying.date.split("T")[0]}T${content.SprintQualifying.time}`).toLocaleString()
-              : null),
+            ? new Date(`${content.SprintQualifying.date.split("T")[0]}T${content.SprintQualifying.time}`).toLocaleString()
+            : null),
         sprint: content.Sprint?.date && content.Sprint?.time
           ? new Date(`${content.Sprint.date.split("T")[0]}T${content.Sprint.time}`).toLocaleString()
           : null,
@@ -65,10 +66,29 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
       };
       setRace(temp)
     })
-  }, [season, round])
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=sq`).then((response) => response.json()).then((content) => {
+      content = JSON.parse(content.replaceAll("NaN", "null"))
 
-
-
+      let temp: { name: string, dnumber: string, team: string, color: string, position: number, q1: number | null, q2: number | null, q3: number | null}[] = [];
+      for (let i in content.DriverNumber) {
+        temp.push({
+          name: content.FullName[i],
+          dnumber: i,
+          team: content.TeamName[i],
+          color: content.TeamColor[i],
+          position: content.Position[i],
+          q1: content.Q1[i] || null,
+          q2: content.Q2[i] || null,
+          q3: content.Q3[i] || null,
+        })
+      }
+      temp.sort((a, b) => {
+        return a.position < b.position ? -1 : 1;
+      })
+      console.log(content)
+      setData((temp))
+    })
+  }, [season, round]);
 
   return (
     <div className="lg:max-w-[80%] xl:max-w-[60%] mx-auto p-8 flex flex-col gap-4">
@@ -80,81 +100,37 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
         </div>
         <h3 className="text-lg text-neutral-400 my-auto font-semibold">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
       </div>
-
       <div>
-        <h2 className="text-xl font-semibold">Weekend Schedule</h2>
+        <h2 className="text-xl font-semibold">Sprint {season == "2023" ? "Shootout" : "Qualifying"} Results</h2>
         <div className="border border-border rounded-lg">
           <Table className="text-md">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-full">Event</TableHead>
-                <TableHead className="max-w-24">Date/Time</TableHead>
+                <TableHead>Pos.</TableHead>
+                <TableHead>Driver</TableHead>
+                <TableHead>Constructor</TableHead>
+                <TableHead>SQ1</TableHead>
+                <TableHead>SQ2</TableHead>
+                <TableHead>SQ3</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="hover:cursor-pointer">
+            <TableBody>
               {
-                race?.fp1 ? (
-                  // <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp1`, RedirectType.push)}>
-                  <TableRow>
-                    <TableCell className="font-semibold">Free Practice 1</TableCell>
-                    <TableCell>{race.fp1}</TableCell>
+                data?.map((row) => (
+                  <TableRow key={row.dnumber}>
+                    <TableCell>{row.position}</TableCell>
+                    <TableCell className="font-semibold">{row.dnumber} {row.name}</TableCell>
+                    <TableCell style={{ color: `#${row.color}` }}>{row.team}</TableCell>
+                    <TableCell>{row.q1 !== null ? `${Math.floor(row.q1 / 60)}:${(row.q1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                    <TableCell>{row.q2 !== null ? `${Math.floor(row.q2 / 60)}:${(row.q2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                    <TableCell>{row.q3 !== null ? `${Math.floor(row.q3 / 60)}:${(row.q3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                   </TableRow>
-                ) : <></>
-              }
-              {
-                race?.fp2 ? (
-                  // <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp2`, RedirectType.push)}>
-                  <TableRow>
-                    <TableCell className="font-semibold">Free Practice 2</TableCell>
-                    <TableCell>{race.fp2}</TableCell>
-                  </TableRow>
-                ) : <></>
-              }
-              {
-                race?.fp3 ? (
-                  // <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp3`, RedirectType.push)}>
-                  <TableRow>
-                    <TableCell className="font-semibold">Free Practice 3</TableCell>
-                    <TableCell>{race.fp3}</TableCell>
-                  </TableRow>
-                ) : <></>
-              }
-              {
-                race?.sq ? (
-                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/sq`, RedirectType.push)}>
-                    <TableCell className="font-semibold">{parseInt(season) === 2023 ? "Sprint Shootout" : "Sprint Qualifying"}</TableCell>
-                    <TableCell>{race.sq}</TableCell>
-                  </TableRow>
-                ) : <></>
-              }
-              {
-                race?.sprint ? (
-                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/sprint`, RedirectType.push)}>
-                    <TableCell className="font-semibold">Sprint</TableCell>
-                    <TableCell>{race.sprint}</TableCell>
-                  </TableRow>
-                ) : <></>
-              }
-              {
-                race?.quali ? (
-                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/quali`, RedirectType.push)}>
-                    <TableCell className="font-semibold">Qualifying</TableCell>
-                    <TableCell>{race.quali}</TableCell>
-                  </TableRow>
-                ) : <></>
-              }
-              {
-                race?.race ? (
-                  <TableRow onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>
-                    <TableCell className="font-semibold">Race</TableCell>
-                    <TableCell>{race.race}</TableCell>
-                  </TableRow>
-                ) : <></>
+                ))
               }
             </TableBody>
           </Table>
         </div>
       </div>
     </div>
-  );
+  )
 }

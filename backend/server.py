@@ -36,7 +36,7 @@ app = FastAPI(lifespan=lifespan)
 
 
 origins = [
-    "http://localhost:3000"
+    "https://formulistic1.aungs.eu.org"
 ]
 
 app.add_middleware(
