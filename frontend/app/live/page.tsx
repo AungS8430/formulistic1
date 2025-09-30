@@ -327,7 +327,7 @@ export default function Live() {
   ]);
 
   useEffect(() => {
-    const eventSource = new EventSource("http://100.125.78.96:1234/stream");
+    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_ROUTE!}/stream`);
     eventSource.onmessage = (event) => {
       const parsedData: RaceData = JSON.parse(event.data);
       setData(parsedData);

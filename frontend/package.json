@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@next/env": "^15.5.4",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-select": "^2.2.6",
@@ -16,6 +17,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "fs": "^0.0.1-security",
     "lucide-react": "^0.542.0",
     "motion": "^12.23.19",
     "next": "15.5.2",
