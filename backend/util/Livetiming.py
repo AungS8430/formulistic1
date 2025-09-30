@@ -16,12 +16,18 @@ class RaceData:
         self.session = {
             "current_lap": 1,
             "session_status": "Unknown",
-            "session_info": {}
+            "session_info": {},
+            "session_name": None,         # <-- Add session_name
+            "remaining_time": None,
+            "extrapolating": None,
+            "clock_utc": None,
         }
 
         # Track conditions and race control
         self.track = {
             "status": "Unknown",
+            "status_name": "Unknown",
+            "status_message": "",
             "flags": [],
             "weather": {
                 "air_temp": None,
@@ -70,7 +76,10 @@ class RaceData:
                 "speeds": {},
                 "personal_fastest": False,
                 "catching": None,
-                "stints": {}  # Add stints field to store tire compound data
+                "stints": {},
+                "current_compound": None,
+                "new_tires": None,
+                "tire_laps": 0,
             }
         return self.drivers[car_number]
 
@@ -81,7 +90,7 @@ class RaceData:
         if message_type == "TimingData":
             self._update_timing_data(data)
         elif message_type == "TimingAppData":
-            self._update_timing_app_data(data)  # Add handler for TimingAppData
+            self._update_timing_app_data(data)
         elif message_type == "WeatherData":
             self._update_weather_data(data)
         elif message_type == "RaceControlMessages":
@@ -100,6 +109,29 @@ class RaceData:
             self.timing_stats = data
         elif message_type == "SessionInfo":
             self.session["session_info"] = data
+            # Update session_name every time session_info is updated
+            self.session["session_name"] = self._extract_session_name(data)
+        elif message_type == "ExtrapolatedClock":
+            self._update_extrapolated_clock(data)
+
+    def _extract_session_name(self, session_info: Dict[str, Any]) -> Optional[str]:
+        """Extract session name from session_info."""
+        # Prefer 'Name', fallback to 'Type', fallback to None
+        return session_info.get("Name") or session_info.get("Type")
+
+    def get_session_name(self):
+        """Return the session name from the latest session_info."""
+        info = self.session.get("session_info", {})
+        return self._extract_session_name(info)
+
+    def _update_extrapolated_clock(self, data: Dict[str, Any]):
+        """Update session timer info from ExtrapolatedClock messages."""
+        if "Remaining" in data:
+            self.session["remaining_time"] = data["Remaining"]
+        if "Extrapolating" in data:
+            self.session["extrapolating"] = data["Extrapolating"]
+        if "Utc" in data:
+            self.session["clock_utc"] = data["Utc"]
 
     def _update_timing_app_data(self, data: Dict[str, Any]):
         """Update timing app data including tire compound information."""
@@ -210,20 +242,24 @@ class RaceData:
 
     def _update_track_status(self, data: Dict[str, Any]):
         """Update track status information."""
+        status_map = {
+            "1": "Green",
+            "2": "Yellow",
+            "3": "Safety Car",
+            "4": "Red Flag",
+            "5": "VSC",
+            "6": "VSC Ending"
+        }
         if "Status" in data:
             self.track["status"] = data["Status"]
+            self.track["status_name"] = status_map.get(str(data["Status"]), f"Status {data['Status']}")
+        else:
+            self.track["status"] = "Unknown"
+            self.track["status_name"] = "Unknown"
         if "Message" in data:
-            # Map status codes to meaningful names
-            status_map = {
-                "1": "Green",
-                "2": "Yellow",
-                "3": "Safety Car",
-                "4": "Red Flag",
-                "5": "VSC",
-                "6": "VSC Ending"
-            }
-            status_code = data["Status"]
-            self.track["status_name"] = status_map.get(status_code, f"Status {status_code}")
+            self.track["status_message"] = data["Message"]
+        else:
+            self.track["status_message"] = ""
 
     def _update_session_data(self, data: Dict[str, Any]):
         """Update session status information."""
@@ -246,7 +282,7 @@ class RaceData:
             "drivers": self.drivers,
             "session": self.session,
             "track": self.track,
-            "race_control_messages": self.race_control_messages[-10:],  # Last 10 messages
+            "race_control_messages": self.race_control_messages,
             "timing_stats": self.timing_stats,
             "driver_list": self.driver_list,
             "top_three": self.top_three,
@@ -259,13 +295,11 @@ def parse_message(msg):
         topic = msg[0]
         data = msg[1]
         time = msg[2]
-
         return {"Title": topic, "Data": data, "Timestamp": time}
     elif isinstance(msg, dict):
         return msg
     else:
         return {"raw": str(msg)}
-
 
 # Global race data container and raw history
 race_data = RaceData()
@@ -326,14 +360,12 @@ async def file_watcher(stream_type: str = "structured"):
         await asyncio.sleep(0.1)
 
 def get_race_data():
-    """Get current structured race data."""
+    """Get the full race data as dict."""
     return race_data.to_dict()
 
-def get_driver_data(car_number: str = None):
-    """Get driver data for specific car number or all drivers."""
-    if car_number:
-        return race_data.drivers.get(car_number, {})
-    return race_data.drivers
+def get_driver_state(car_number: str):
+    """Get a single driver's state."""
+    return race_data.get_driver_state(car_number)
 
 def get_session_info():
     """Get current session information."""
@@ -346,3 +378,7 @@ def get_track_status():
 def get_race_control_messages(limit: int = 10):
     """Get recent race control messages."""
     return race_data.race_control_messages[-limit:] if limit > 0 else race_data.race_control_messages
+
+def get_session_name():
+    """Return the session name as a string."""
+    return race_data.get_session_name()

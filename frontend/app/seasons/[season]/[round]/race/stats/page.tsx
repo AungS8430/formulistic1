@@ -12,38 +12,75 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination"
 import {redirect, RedirectType} from "next/navigation";
+import Compound from "@/components/compound";
+import Weather from "@/components/weather";
 
 export default function PastStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params);
   const [mode, setMode] = useState<string>("Driver")
   const [driver, setDriver] = useState<number | null>(null)
   const [lap, setLap] = useState<number>(1)
+  const [compounds, setCompounds] = useState<null | { [key: string]: { abbreviation: string, color: string } }>(null)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
   const [data, setData] = useState<null | { name: string, dnumber: string, code: string, team: string, color: string, position: number, grid: number | null, time: number | null }[]>(null)
-  const [driverData, setDriverData] = useState<null | { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[]>(null)
+  const [driverData, setDriverData] = useState<null | { name: string, dnumber: number, code: string, fastest: { lap: number, s1: number, s2: number, s3: number }, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[]>(null)
   const [lapData, setLapData] = useState<null | { lap: string, drivers: { name: string, dnumber: number, code: string, position: number | null, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, interval: number }[] }[]>(null)
   const [weather, setWeather] = useState<null | { lap: string, airTemp: number, trackTemp: number, humidity: number, pressure: number, rain: boolean, windSpeed: number, windDir: number }[]>(null)
+  const [fastest, setFastest] = useState<null | { lap: string, s1: string, s2: string, s3: string }>(null)
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   useEffect(() => {
-    fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/races`).then((response) => response.json()).then((content) => {
-      const row = content.MRData.RaceTable.Races[0]
+    fetch(`http://100.125.78.96:1234/session/info?year=${season}&gp=${round}`).then((response) => response.json()).then((content) => {
+      content = JSON.parse(content)
       let temp: { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number } = {
-        round: parseInt(row.round),
-        name: row.raceName,
-        circuit: row.Circuit.circuitName,
-        startDate: (new Date(row.FirstPractice ? row.FirstPractice.date : row.date)).toLocaleDateString(),
-        endDate: (new Date(row.date)).toLocaleDateString(),
-        fp1: row.FirstPractice ? (new Date(row.FirstPractice.date + "T" + (row.FirstPractice.time ? row.FirstPractice.time : "00:00:00Z"))).toLocaleString() : null,
-        fp2: row.SecondPractice ? (new Date(row.SecondPractice.date + "T" + (row.SecondPractice.time ? row.SecondPractice.time : "00:00:00Z"))).toLocaleString() : null,
-        fp3: row.ThirdPractice ? (new Date(row.ThirdPractice.date + "T" + (row.ThirdPractice.time ? row.ThirdPractice.time : "00:00:00Z"))).toLocaleString() : null,
-        sq: season == "2023" ? (row.SprintShootout ? (new Date(row.SprintShootout.date + "T" + (row.SprintShootout.time ? row.SprintShootout.time : "00:00:00Z"))).toLocaleString() : null ) : (row.SprintQualifying ? (new Date(row.SprintQualifying.date + "T" + (row.SprintQualifying.time ? row.SprintQualifying.time : "00:00:00Z"))).toLocaleDateString() : null),
-        sprint: row.Sprint ? (new Date(row.Sprint.date + "T" + (row.Sprint.time ? row.Sprint.time : "00:00:00Z"))).toLocaleString() : null,
-        quali: row.Qualifying ? (new Date(row.Qualifying.date + "T" + (row.Qualifying.time ? row.Qualifying.time : "00:00:00Z"))).toLocaleString() : null,
-        race : (new Date(row.date + "T" + (row.time ? row.time : "00:00:00Z"))).toLocaleString(),
-        state: (new Date((new Date(row.FirstPractice ? row.FirstPractice.date : row.date)).getDate()) <= today && today <= new Date((new Date(row.date)).getDate()) ? 0 : (today < new Date((new Date(row.FirstPractice ? row.FirstPractice.date : row.date)).getDate()) ? 1 : -1))
+        round: parseInt(content.round ?? content.Round ?? content.roundNumber ?? "0"),
+        name: content.raceName ?? content.name ?? "",
+        circuit: content.Circuit?.circuitName ?? "",
+        startDate: content.FirstPractice?.date
+          ? new Date(content.FirstPractice.date).toLocaleDateString()
+          : (content.date ? new Date(content.date).toLocaleDateString() : ""),
+        endDate: content.date
+          ? new Date(content.date).toLocaleDateString()
+          : "",
+        fp1: content.FirstPractice?.date && content.FirstPractice?.time
+          ? new Date(`${content.FirstPractice.date.split("T")[0]}T${content.FirstPractice.time}`).toLocaleString()
+          : null,
+        fp2: content.SecondPractice?.date && content.SecondPractice?.time
+          ? new Date(`${content.SecondPractice.date.split("T")[0]}T${content.SecondPractice.time}`).toLocaleString()
+          : null,
+        fp3: content.ThirdPractice?.date && content.ThirdPractice?.time
+          ? new Date(`${content.ThirdPractice.date.split("T")[0]}T${content.ThirdPractice.time}`).toLocaleString()
+          : null,
+        sq: season == "2023"
+          ? (content.SprintShootout?.date && content.SprintShootout?.time
+            ? new Date(`${content.SprintShootout.date.split("T")[0]}T${content.SprintShootout.time}`).toLocaleString()
+            : null)
+          : (content.SprintQualifying?.date && content.SprintQualifying?.time
+            ? new Date(`${content.SprintQualifying.date.split("T")[0]}T${content.SprintQualifying.time}`).toLocaleString()
+            : null),
+        sprint: content.Sprint?.date && content.Sprint?.time
+          ? new Date(`${content.Sprint.date.split("T")[0]}T${content.Sprint.time}`).toLocaleString()
+          : null,
+        quali: content.Qualifying?.date && content.Qualifying?.time
+          ? new Date(`${content.Qualifying.date.split("T")[0]}T${content.Qualifying.time}`).toLocaleString()
+          : null,
+        race: content.date && content.time
+          ? new Date(`${content.date.split("T")[0]}T${content.time}`).toLocaleString()
+          : (content.date ? new Date(content.date).toLocaleString() : ""),
+        state: (() => {
+          const start = content.FirstPractice?.date
+            ? new Date(content.FirstPractice.date)
+            : (content.date ? new Date(content.date) : null);
+          const end = content.date ? new Date(content.date) : null;
+          if (start && end) {
+            if (start <= today && today <= end) return 0;
+            if (today < start) return 1;
+            return -1;
+          }
+          return -1;
+        })()
       };
       setRace(temp)
     })
@@ -72,51 +109,52 @@ export default function PastStats({ params }: { params: Promise<{ season: string
     fetch(`http://100.125.78.96:1234/session/laptimes?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
-      let dtemp: { name: string, dnumber: number, code: string, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
-      Object.keys(content).forEach(function (key, index) {
+      let dtemp: { name: string, dnumber: number, code: string, fastest: { lap: number, s1: number, s2: number, s3: number }, laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] }[] = [];
+      Object.keys(content["Data"]).forEach(function (key, index) {
         const dx = (data?.filter((d) => d.dnumber == key)[0]) ?? { name: "", code: "" }
         let laps: { lap: string, laptime: number | null, s1: number | null, s2: number | null, s3: number | null, pitTime: number | null, compound: string, tyreLife: number, status: number, position: number | null, interval: number }[] = [];
-        Object.keys(content[key].Time).forEach(function (lkey, lindex) {
+        Object.keys(content["Data"][key].Time).forEach(function (lkey, lindex) {
           laps.push({
             lap: lkey,
-            laptime: content[key].LapTime[lkey],
-            s1: content[key].Sector1Time[lkey],
-            s2: content[key].Sector2Time[lkey],
-            s3: content[key].Sector3Time[lkey],
-            pitTime: content[key].PitInTime[lkey] ? content[key].PitOutTime[(parseInt(lkey) + 1).toFixed(1)] - content[key].PitInTime[lkey] : null,
-            compound: content[key].Compound[lkey],
-            tyreLife: content[key].TyreLife[lkey],
-            status: content[key].TrackStatus[lkey],
-            position: content[key].Position[lkey],
-            interval: content[key].GapToLeader[lkey],
+            laptime: content["Data"][key].LapTime[lkey],
+            s1: content["Data"][key].Sector1Time[lkey],
+            s2: content["Data"][key].Sector2Time[lkey],
+            s3: content["Data"][key].Sector3Time[lkey],
+            pitTime: content["Data"][key].PitInTime[lkey] ? content["Data"][key].PitOutTime[(parseInt(lkey) + 1).toFixed(1)] - content["Data"][key].PitInTime[lkey] : null,
+            compound: content["Data"][key].Compound[lkey],
+            tyreLife: content["Data"][key].TyreLife[lkey],
+            status: content["Data"][key].TrackStatus[lkey],
+            position: content["Data"][key].Position[lkey],
+            interval: content["Data"][key].GapToLeader[lkey],
           })
         })
         dtemp.push({
           name: dx.name,
           dnumber: parseInt(key),
           code: dx.code,
+          fastest: content["Data"][key]["Fastest"] ?? { lap: 0, s1: 0, s2: 0, s3: 0 },
           laps: laps
         })
       })
       setDriverData(dtemp)
+      setFastest(content["Fastest"])
+      setCompounds(content["Compounds"])
+
+      console.log(dtemp)
     })
     fetch(`http://100.125.78.96:1234/session/weatherdata?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
-      let tmp: { lap: string, airTemp: number, trackTemp: number, humidity: number, pressure: number, rain: boolean, windSpeed: number, windDir: number }[] = [];
-
-      Object.keys(content).forEach(function (key, index)  {
-        tmp.push({
-          lap: key,
-          airTemp: content.AirTemp[key],
-          trackTemp: content.TrackTemp[key],
-          humidity: content.Humidity[key],
-          pressure: content.Pressure[key],
-          rain: content.Rainfall[key],
-          windSpeed: content.WindSpeed[key],
-          windDir: content.WindDirection[key],
-        })
-      })
+      const tmp = Object.keys(content.index).map((key) => ({
+        lap: key,
+        airTemp: Math.round(content.AirTemp[key]),
+        trackTemp: Math.round(content.TrackTemp[key]),
+        humidity: Math.round(content.Humidity[key]),
+        pressure: Math.round(content.Pressure[key]),
+        rain: content.Rainfall[key],
+        windSpeed: Math.round(content.WindSpeed[key]),
+        windDir: Math.round(content.WindDirection[key]),
+      }));
 
       setWeather(tmp)
     })
@@ -163,7 +201,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
     }
   }, [driverData]);
   return (
-    <div className="w-full max-h-[calc(100vh-60px)] flex flex-col">
+    <div className="w-full max-h-[calc(100vh-44px)] flex flex-col">
       <div className="flex flex-row w-full p-3">
         <div className="flex flex-col">
           <h1 className="text-3xl font-bold">{race?.name}</h1>
@@ -171,7 +209,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
         </div>
         <div className="grow" />
         <div className="flex flex-row my-auto">
-          <Button variant="link" onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
+          <Button variant="link" className="hover:cursor-pointer" onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
           <Select onValueChange={(value) => setMode(value)} defaultValue={mode}>
             <SelectTrigger>
               <SelectValue placeholder="Select mode" />
@@ -185,8 +223,8 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       </div>
       {
         mode == "Driver" && (
-          <div className="flex flex-row w-full">
-            <div className="flex flex-col w-3xs bg-navbar shadow-xl p-4">
+          <div className="flex flex-row w-full overflow-y-hidden">
+            <div className="flex flex-col w-3xs bg-navbar shadow-xl p-4 rounded-r-xl border-t border-b border-r">
               <h3 className="font-semibold text-md text-center">Drivers</h3>
               <div className="flex flex-col overflow-y-auto shrink h-[calc(100vh-200px)]">
                 { data?.map((d) => (
@@ -194,7 +232,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                 ))}
               </div>
             </div>
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] p-2 py-4">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-4 xl:max-w-5xl mx-auto">
               <h3 className="font-semibold text-lg">{ data?.filter((d) => parseInt(d.dnumber) == driver)[0].name }'s data</h3>
               <Table>
                 <TableHeader>
@@ -217,11 +255,18 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                       <TableRow key={row.lap}>
                         <TableCell>{parseInt(row.lap)}</TableCell>
                         <TableCell>{row.position}</TableCell>
-                        <TableCell>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.compound}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.lap == parseInt(row.lap) ? (parseInt(fastest?.lap || "0") == driver ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s1 == parseInt(row.lap) ? parseInt(fastest?.s1 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s2 == parseInt(row.lap) ? parseInt(fastest?.s2 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s3 == parseInt(row.lap) ? parseInt(fastest?.s3 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                        <TableCell>
+                          {compounds && compounds[row.compound] && (
+                            <Compound
+                              abbreviation={compounds[row.compound].abbreviation}
+                              color={compounds[row.compound].color}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell>{row.tyreLife}</TableCell>
                         <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                         <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
@@ -236,44 +281,64 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       }
       {
         mode == "Lap-by-Lap" && (
-          <div className="w-full overflow-y-scroll max-h-[calc(100vh-120px)] p-2 py-4">
-            <div className="flex flex-row">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Pos.</TableHead>
-                    <TableHead>Driver</TableHead>
-                    <TableHead>Laptime</TableHead>
-                    <TableHead>Sector 1</TableHead>
-                    <TableHead>Sector 2</TableHead>
-                    <TableHead>Sector 3</TableHead>
-                    <TableHead>Compound</TableHead>
-                    <TableHead>Tyre Life</TableHead>
-                    <TableHead>Pit Time</TableHead>
-                    <TableHead>Interval</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {
-                    lapData?.filter(l => parseInt(l.lap) == lap)[0]?.drivers.map((row) => (
-                      <TableRow key={row.dnumber}>
-                        <TableCell>{row.position}</TableCell>
-                        <TableCell className="font-semibold" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>{row.dnumber} {(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</TableCell>
-                        <TableCell>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.compound}</TableCell>
-                        <TableCell>{row.tyreLife}</TableCell>
-                        <TableCell>{row.pitTime}</TableCell>
-                        <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
+          <div className="overflow-y-hidden flex flex-row">
+            <div className="flex flex-row w-full">
+              <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex flex-row py-2">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pos.</TableHead>
+                      <TableHead>Driver</TableHead>
+                      <TableHead>Laptime</TableHead>
+                      <TableHead>Sector 1</TableHead>
+                      <TableHead>Sector 2</TableHead>
+                      <TableHead>Sector 3</TableHead>
+                      <TableHead>Compound</TableHead>
+                      <TableHead>Tyre Life</TableHead>
+                      <TableHead>Pit Time</TableHead>
+                      <TableHead>Interval</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {
+                      lapData?.filter(l => parseInt(l.lap) == lap)[0]?.drivers.map((row) => (
+                        <TableRow key={row.dnumber}>
+                          <TableCell>{row.position}</TableCell>
+                          <TableCell className="font-semibold" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>{row.dnumber} {(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.lap == lap ? (parseInt(fastest?.lap || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s1 == lap ? (parseInt(fastest?.s1 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s2 == lap ? (parseInt(fastest?.s2 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s3 == lap ? (parseInt(fastest?.s3 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell>
+                            {compounds && compounds[row.compound] && (
+                              <Compound
+                                abbreviation={compounds[row.compound].abbreviation}
+                                color={compounds[row.compound].color}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>{row.tyreLife}</TableCell>
+                          <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
+                        </TableRow>
+                      ))
+                    }
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="bg-navbar shadow-xl rounded-full border h-fit p-2 pb-6 my-auto">
+                { weather &&
+                  ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
+                                            humidity={weather[lap].humidity} pressure={weather[lap].pressure}
+                                            rain={weather[lap].rain} windSpeed={weather[lap].windSpeed} windDir={weather[lap].windDir}/>
+                      : <Weather airTemp={weather[weather.length - 1].airTemp} trackTemp={weather[weather.length - 1].trackTemp}
+                                 humidity={weather[weather.length - 1].humidity} pressure={weather[weather.length - 1].pressure}
+                                 rain={weather[weather.length - 1].rain} windSpeed={weather[weather.length - 1].windSpeed} windDir={weather[weather.length - 1].windDir}/>
+                  )
+                }
+              </div>
             </div>
-            <div className="sticky bottom-0 flex items-center gap-2 bg-navbar rounded-xl shadow-lg p-2">
+            <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar border-t shadow-lg p-1">
               <Pagination>
                 <PaginationContent>
                   {lapData && (
@@ -326,7 +391,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                           const val = Number(e.target.value);
                           if (!isNaN(val) && val >= 1 && val <= (lapData?.length || 1)) setLap(val);
                         }}
-                        className="w-10 font-semibold border rounded px-2 py-1 text-center"
+                        className="w-15 border rounded px-2 py-1 text-center"
                         style={{ MozAppearance: "textfield" }}
                       />
                       {/* Next 5 laps */}
@@ -373,6 +438,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
               </Pagination>
             </div>
           </div>
+
         )
       }
     </div>

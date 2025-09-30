@@ -1,17 +1,38 @@
-from util.Fetchpastrace import get_session_data
+from util.pastCache import data
 from util.Livetiming import (
     file_watcher, background_file_reader, get_race_data,
-    get_driver_data, get_session_info, get_track_status,
+    get_session_info, get_track_status,
     get_race_control_messages
 )
+from util.FetchSeason import get_schedule
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import asyncio
 import os
 
 
-app = FastAPI()
+FILE_PATH = "fake_saved_data.txt" # change it to saved_data.txt to read actual data
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, "w") as f:
+            f.truncate(0)
+        while True:
+            try:
+                with open(FILE_PATH, "r") as f:
+                    f.read(1)
+                break
+            except Exception:
+                await asyncio.sleep(0.001)
+    asyncio.create_task(background_file_reader(FILE_PATH))
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 origins = [
@@ -26,14 +47,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-FILE_PATH = "fake_saved_data.txt" # change it to saved_data.txt to read actual data
-
-@app.on_event("startup")
-async def start_background_reader():
-    if os.path.exists(FILE_PATH):
-        with open(FILE_PATH, "w") as f:
-            f.truncate(0)
-    asyncio.create_task(background_file_reader(FILE_PATH))
 
 @app.get("/stream")
 async def stream(format: str = Query("structured", description="Stream format: 'structured' for race data, 'raw' for original messages")):
@@ -44,11 +57,6 @@ async def stream(format: str = Query("structured", description="Stream format: '
 async def race_data():
     """Get complete structured race data including drivers, session, track status."""
     return get_race_data()
-
-@app.get("/race/drivers")
-async def drivers_data(car_number: str = Query(None, description="Specific car number to get data for")):
-    """Get driver data for all drivers or a specific car number."""
-    return get_driver_data(car_number)
 
 @app.get("/race/session")
 async def session_data():
@@ -68,19 +76,23 @@ async def race_messages(limit: int = Query(10, ge=1, le=50, description="Number 
 
 @app.get("/session/laptimes")
 async def session_laptimes(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "laptime")
+    return data.pass_data(year, gp, session, "laptime")
 
 
 @app.get("/session/weatherdata")
 async def session_weatherdata(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "weather")
+    return data.pass_data(year, gp, session, "weather")
 
 
 @app.get("/session/results")
 async def session_results(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "results")
+    return data.pass_data(year, gp, session, "results")
 
 
 @app.get("/session/info")
 async def session_info(year: int=2025, gp: int|str=1, session: str="r"):
-    return get_session_data(year, gp, session, "info")
+    return data.pass_data(year, gp, session, "info")
+
+@app.get("/season/schedule")
+async def season_schedule(year: int=2025):
+    return get_schedule(year)

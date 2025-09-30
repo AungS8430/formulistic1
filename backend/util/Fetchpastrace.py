@@ -1,12 +1,12 @@
 from typing import Literal
 from .races import get_session
 import fastf1
+from fastf1.ergast import Ergast
 import pandas as pd
-import json
 import datetime
+from fastf1.plotting import get_compound_mapping
 
-
-fastf1.ergast.interface.BASE_URL = "https://api.jolpi.ca/ergast/f1"  # pyright: ignore
+ergast = Ergast(result_type="raw")
 
 
 laptime_var_selections = ["DriverNumber", "LapNumber", "Compound", "TyreLife", "TrackStatus", "Position", "Deleted"]
@@ -52,6 +52,13 @@ def laptime_process(laps: pd.DataFrame, drivers: list[str], total_lap: int, is_r
         out[driver].astype({"LapNumber": "int32"})
         out[driver].set_index("LapNumber", inplace=True)
         out[driver] = out[driver].to_dict()
+        fastest_lap_idx = min(out[driver]["LapTime"], key=out[driver]["LapTime"].get) if "LapTime" in out[driver] and out[driver]["LapTime"] else None
+        out[driver]["Fastest"] = {
+            "lap": int(fastest_lap_idx) if fastest_lap_idx is not None else None,
+            "s1": min(out[driver]["Sector1Time"], key=out[driver]["Sector1Time"].get) if "Sector1Time" in out[driver] and out[driver]["Sector1Time"] else None,
+            "s2": min(out[driver]["Sector2Time"], key=out[driver]["Sector2Time"].get) if "Sector2Time" in out[driver] and out[driver]["Sector2Time"] else None,
+            "s3": min(out[driver]["Sector3Time"], key=out[driver]["Sector3Time"].get) if "Sector3Time" in out[driver] and out[driver]["Sector3Time"] else None
+        }
     return out
 
 def results_process(results: pd.DataFrame):
@@ -79,34 +86,59 @@ def weather_process(data: fastf1.core.Session): # pyright: ignore
     out = out.to_dict()
     return out
 
-def info_process(info: dict):
-    raw_info = info.copy()
-    for idx, itr in raw_info.items():
-        if type(itr) == datetime.timedelta:
-            info[idx] = itr.seconds / 3600
-        if type(itr) == datetime.datetime:
-            info[idx] = itr.strftime("%Y-%m-%d %H:%M:%S")
-    return info
+def info_process(season: int, gp: int):
+    data = ergast.get_race_schedule(season, gp)
+    if len(data) == 0 or data is None:
+        return {}
+    print(data)
+    return data[0]
 
-def get_session_data(year: int ,gp: str|int, session_type: str, data: Literal["laptime", "weather", "results", "info"]):
+def get_session_data(year: int ,gp: str|int, session_type: str):
     session = get_session(year, gp, session_type)
     try:
         session.laps
     except Exception:
-        return json.dumps(["Error", "Data not found"])
+        return ["Error", "Data not found"]
     drivers = session.drivers
     total_lap = session.total_laps
-    out = ""
-    match data:
-        case "laptime":
-            out = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
-        case "weather":
-            out = weather_process(session)
-        case "results":
-            out = results_process(session.results)
-        case "info":
-            out = info_process(session.session_info)
-            out["TotalLaps"] = total_lap
-        case _:
-            pass
-    return json.dumps(out)
+
+    out = {"laptime":{},
+        "weather" : weather_process(session),
+        "results" : results_process(session.results),
+        "info" : info_process(year, gp)
+    }
+
+    out["laptime"]["Data"] = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
+
+    fastest = {}
+    for key in ["lap", "s1", "s2", "s3"]:
+        def get_time(driver):
+            idx = out["laptime"]["Data"][driver]["Fastest"][key]
+            if idx is None:
+                return float("inf")
+            return out["laptime"]["Data"][driver]["LapTime" if key == "lap" else f"Sector{key[1]}Time"].get(idx, float("inf"))
+        fastest_driver = min(drivers, key=get_time, default=None)
+        fastest[key] = fastest_driver
+    out["laptime"]["Fastest"] = fastest
+
+    compound_colors = get_compound_mapping(session)
+    out["laptime"]["Compounds"] = {}
+    compound_abv = {
+        "SOFT": "S",
+        "MEDIUM": "M",
+        "HARD": "H",
+        "INTERMEDIATE": "I",
+        "WET": "W",
+        "DRY": "D",
+        "SUPERSOFT": "SS",
+        "ULTRASOFT": "US",
+        "HYPERSOFT": "HS",
+        "SUPERHARD": "SH",
+    }
+    for (key, value) in compound_colors.items():
+        out["laptime"]["Compounds"][key] = {
+            "color": value,
+            "abbreviation": compound_abv[key] if key in compound_abv else key
+        }
+
+    return out
