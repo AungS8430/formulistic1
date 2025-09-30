@@ -2,7 +2,6 @@ import ast
 import json
 import os
 import asyncio
-from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 class RaceData:
@@ -265,11 +264,9 @@ class RaceData:
         """Update session status information."""
         if "StatusSeries" in data:
             # Get the latest status update
-            latest_status = None
             for status_id, status_data in data["StatusSeries"].items():
                 if "SessionStatus" in status_data:
                     self.session["session_status"] = status_data["SessionStatus"]
-                    latest_status = status_data
 
     def _update_lap_count(self, data: Dict[str, Any]):
         """Update current lap count."""

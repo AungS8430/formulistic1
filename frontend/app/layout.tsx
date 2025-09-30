@@ -20,31 +20,32 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <>
       <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
-            <div className="max-h-[calc(100vh-44px)] overflow-y-auto max-w-7xl mx-auto p-2">
-              {children}
-            </div>
-
-          </ThemeProvider>
-        </body>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <Navbar />
+        <div className="max-h-[calc(100vh-44px)] overflow-y-auto max-w-7xl mx-auto px-2 sm:px-4">
+          {children}
+        </div>
+      </ThemeProvider>
+      </body>
       </html>
     </>
-
   );
 }

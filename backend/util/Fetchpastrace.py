@@ -1,9 +1,7 @@
-from typing import Literal
 from .races import get_session
 import fastf1
 from fastf1.ergast import Ergast
 import pandas as pd
-import datetime
 from fastf1.plotting import get_compound_mapping
 
 ergast = Ergast(result_type="raw")
@@ -93,7 +91,7 @@ def info_process(season: int, gp: int):
     print(data)
     return data[0]
 
-def get_session_data(year: int ,gp: str|int, session_type: str):
+def get_session_data(year: int ,gp: int, session_type: str):
     session = get_session(year, gp, session_type)
     try:
         session.laps

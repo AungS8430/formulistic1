@@ -58,7 +58,7 @@ export default function Navbar() {
   )
   return (
     <div className="p-1 bg-navbar shadow-md relative z-50">
-      <div className="max-w-7xl mx-auto flex">
+      <div className="max-w-7xl mx-auto flex h-[36px]">
         <Link href="/">
           <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0 cursor-pointer"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
         </Link>
@@ -69,7 +69,7 @@ export default function Navbar() {
               <NavigationMenuTrigger>This Season</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="w-60 relative max-h-64 overflow-y-auto">
-                  <NavigationMenuLink href={`/${currentSeason}`} className="font-bold">View Season</NavigationMenuLink>
+                  <NavigationMenuLink href={`/seasons/${currentSeason}`} className="font-bold">View Season</NavigationMenuLink>
                   {
                     races?.map((race) => (
                       <NavigationMenuLink

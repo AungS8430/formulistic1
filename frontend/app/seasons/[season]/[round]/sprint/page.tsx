@@ -92,25 +92,25 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
   }, [season, round]);
 
   return (
-    <div className="lg:max-w-[80%] xl:max-w-[60%] mx-auto p-8 flex flex-col gap-4">
+    <div className="max-w-full lg:max-w-[80%] xl:max-w-[60%] mx-auto p-2 md:p-8 flex flex-col gap-4">
       <div>
-        <div className="flex flex-row gap-2">
-          <h1 className="text-4xl font-bold">{season} {race?.name}</h1>
-          { race?.state == 0 ? <Badge className="bg-red-thm text-md font-bold">Race Weekend</Badge> : <></>}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <h1 className="text-2xl md:text-4xl font-bold">{season} {race?.name}</h1>
+          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md font-bold">Race Weekend</Badge> : <></>}
           <div className="grow"></div>
         </div>
-        <h3 className="text-lg text-neutral-400 my-auto font-semibold">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
+        <h3 className="text-md md:text-lg text-neutral-400 my-auto font-semibold">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
       </div>
       <div>
         <div className="gap-2 inline-flex">
-          <h2 className="text-xl font-semibold">Sprint Results</h2>
+          <h2 className="text-lg md:text-xl font-semibold">Sprint Results</h2>
           <Link href={`/seasons/${season}/${round}/sprint/stats`}>
             <Button variant="link" className="-m-1 hover:cursor-pointer">View Stats</Button>
           </Link>
 
         </div>
-        <div className="border border-border rounded-lg">
-          <Table className="text-md">
+        <div className="border border-border rounded-lg overflow-x-auto">
+          <Table className="text-sm md:text-md min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Pos.</TableHead>

@@ -75,22 +75,22 @@ async def race_messages(limit: int = Query(10, ge=1, le=50, description="Number 
 
 
 @app.get("/session/laptimes")
-async def session_laptimes(year: int=2025, gp: int|str=1, session: str="r"):
+async def session_laptimes(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "laptime")
 
 
 @app.get("/session/weatherdata")
-async def session_weatherdata(year: int=2025, gp: int|str=1, session: str="r"):
+async def session_weatherdata(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "weather")
 
 
 @app.get("/session/results")
-async def session_results(year: int=2025, gp: int|str=1, session: str="r"):
+async def session_results(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "results")
 
 
 @app.get("/session/info")
-async def session_info(year: int=2025, gp: int|str=1, session: str="r"):
+async def session_info(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "info")
 
 @app.get("/season/schedule")

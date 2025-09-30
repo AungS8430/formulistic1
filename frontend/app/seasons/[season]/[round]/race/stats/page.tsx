@@ -17,7 +17,7 @@ import Weather from "@/components/weather";
 
 export default function PastStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params);
-  const [mode, setMode] = useState<string>("Driver")
+  const [mode, setMode] = useState<string>("Lap-by-Lap")
   const [driver, setDriver] = useState<number | null>(null)
   const [lap, setLap] = useState<number>(1)
   const [compounds, setCompounds] = useState<null | { [key: string]: { abbreviation: string, color: string } }>(null)
@@ -202,13 +202,13 @@ export default function PastStats({ params }: { params: Promise<{ season: string
   }, [driverData]);
   return (
     <div className="w-full max-h-[calc(100vh-44px)] flex flex-col">
-      <div className="flex flex-row w-full px-3 pb-3">
+      <div className="flex flex-col sm:flex-row w-full px-3 pb-3">
         <div className="flex flex-col">
-          <h1 className="text-3xl font-bold">{race?.name}</h1>
-          <h2 className="text-neutral-400">{race?.startDate} - {race?.endDate} · {race?.circuit}</h2>
+          <h1 className="text-2xl md:text-3xl font-bold">{race?.name}</h1>
+          <h2 className="text-xs md:text-lg text-neutral-400">{race?.startDate} - {race?.endDate} · {race?.circuit}</h2>
         </div>
         <div className="grow" />
-        <div className="flex flex-row my-auto">
+        <div className="hidden md:flex flex-col sm:flex-row my-auto text-xs md:text-sm">
           <Button variant="link" className="hover:cursor-pointer" onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>View Results</Button>
           <Select onValueChange={(value) => setMode(value)} defaultValue={mode}>
             <SelectTrigger>
@@ -223,7 +223,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       </div>
       {
         mode == "Driver" && (
-          <div className="flex flex-row w-full overflow-y-hidden">
+          <div className="hidden md:flex flex-col sm:flex-row w-full overflow-y-hidden">
             <div className="flex flex-col w-3xs bg-navbar shadow-xl p-4 rounded-r-xl border-t border-b border-r">
               <h3 className="font-semibold text-md text-center">Drivers</h3>
               <div className="flex flex-col overflow-y-auto shrink h-[calc(100vh-200px)]">
@@ -234,57 +234,60 @@ export default function PastStats({ params }: { params: Promise<{ season: string
             </div>
             <div className="w-full overflow-y-scroll max-h-[calc(100vh-132px)] p-4 xl:max-w-5xl mx-auto">
               <h3 className="font-semibold text-lg">{ data?.filter((d) => parseInt(d.dnumber) == driver)[0].name }'s data</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Lap</TableHead>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Laptime</TableHead>
-                    <TableHead>Sector 1</TableHead>
-                    <TableHead>Sector 2</TableHead>
-                    <TableHead>Sector 3</TableHead>
-                    <TableHead>Compound</TableHead>
-                    <TableHead>Tyre Life</TableHead>
-                    <TableHead>Pit</TableHead>
-                    <TableHead>Interval</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {
-                    driverData?.filter(d => d.dnumber == driver)[0]?.laps.map((row) => (
-                      <TableRow key={row.lap}>
-                        <TableCell>{parseInt(row.lap)}</TableCell>
-                        <TableCell>{row.position}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.lap == parseInt(row.lap) ? (parseInt(fastest?.lap || "0") == driver ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s1 == parseInt(row.lap) ? parseInt(fastest?.s1 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s2 == parseInt(row.lap) ? parseInt(fastest?.s2 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s3 == parseInt(row.lap) ? parseInt(fastest?.s3 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>
-                          {compounds && compounds[row.compound] && (
-                            <Compound
-                              abbreviation={compounds[row.compound].abbreviation}
-                              color={compounds[row.compound].color}
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>{row.tyreLife}</TableCell>
-                        <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                        <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
-                      </TableRow>
-                    ))
-                  }
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Lap</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Laptime</TableHead>
+                      <TableHead>Sector 1</TableHead>
+                      <TableHead>Sector 2</TableHead>
+                      <TableHead>Sector 3</TableHead>
+                      <TableHead>Compound</TableHead>
+                      <TableHead>Tyre Life</TableHead>
+                      <TableHead>Pit</TableHead>
+                      <TableHead>Interval</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {
+                      driverData?.filter(d => d.dnumber == driver)[0]?.laps.map((row) => (
+                        <TableRow key={row.lap}>
+                          <TableCell>{parseInt(row.lap)}</TableCell>
+                          <TableCell>{row.position}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.lap == parseInt(row.lap) ? (parseInt(fastest?.lap || "0") == driver ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s1 == parseInt(row.lap) ? parseInt(fastest?.s1 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s2 == parseInt(row.lap) ? parseInt(fastest?.s2 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s3 == parseInt(row.lap) ? parseInt(fastest?.s3 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell>
+                            {compounds && compounds[row.compound] && (
+                              <Compound
+                                abbreviation={compounds[row.compound].abbreviation}
+                                color={compounds[row.compound].color}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>{row.tyreLife}</TableCell>
+                          <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                          <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
+                        </TableRow>
+                      ))
+                    }
+                  </TableBody>
+                </Table>
+              </div>
+
             </div>
           </div>
         )
       }
       {
         mode == "Lap-by-Lap" && (
-          <div className="overflow-y-hidden flex flex-row">
-            <div className="flex flex-row w-full gap-2">
-              <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex flex-row py-2">
-                <Table>
+          <div className="overflow-y-hidden flex flex-col sm:flex-row">
+            <div className="flex flex-col sm:flex-row w-full gap-2">
+              <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex flex-col sm:flex-row py-2 overflow-x-auto">
+                <Table className="min-w-[600px] text-xs md:text-sm">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Pos.</TableHead>
@@ -326,7 +329,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                   </TableBody>
                 </Table>
               </div>
-              <div className="bg-navbar shadow-xl rounded-full border h-fit p-2 pb-6 my-auto">
+              <div className="bg-navbar shadow-xl rounded-full border h-fit p-2 pb-6 my-auto hidden md:block">
                 { weather &&
                   ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
                                             humidity={weather[lap].humidity} pressure={weather[lap].pressure}
@@ -340,7 +343,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
             </div>
             <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar border-t shadow-lg p-1">
               <Pagination>
-                <PaginationContent>
+                <PaginationContent className="flex-row!">
                   {lapData && (
                     <>
                       {/* First Lap */}
@@ -375,7 +378,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                           return l >= Math.max(1, lap - 5) && l < lap;
                         })
                         .map((d) => (
-                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
+                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))} className="hidden md:inline">
                             <PaginationLink isActive={parseInt(d.lap) == lap}>
                               {parseInt(d.lap)}
                             </PaginationLink>
@@ -401,7 +404,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                           return l > lap && l <= lap + 5;
                         })
                         .map((d) => (
-                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
+                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))} className="hidden md:inline">
                             <PaginationLink isActive={parseInt(d.lap) == lap}>
                               {parseInt(d.lap)}
                             </PaginationLink>
