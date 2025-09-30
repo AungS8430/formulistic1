@@ -57,68 +57,71 @@ export default function Navbar() {
     (_, i) => currentSeason - i - 1
   )
   return (
-    <div className="flex p-1 bg-navbar shadow-md relative z-50">
-      <Link href="/">
-        <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0 cursor-pointer"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
-      </Link>
-      <div className="grow" />
-      <NavigationMenu viewport={false}>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>This Season</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <div className="w-60 relative max-h-64 overflow-y-auto">
-                <NavigationMenuLink href={`/${currentSeason}`} className="font-bold">View Season</NavigationMenuLink>
-                {
-                  races?.map((race) => (
-                    <NavigationMenuLink
-                      key={race.name}
-                      href={`/seasons/${currentSeason}/${race.round}`}
-                    >
-                      <span className={race.state == 1 ? "text-neutral-400" : race.state == 0 ? "text-red-thm" : ""}>{race.name}</span>
-                      {
-                        race.state == 0 ? (
-                          <Badge className="bg-red-thm">Live</Badge>
-                        ) : <></>
-                      }
-                    </NavigationMenuLink>
-                  ))
-                }
-              </div>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Past Seasons</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <div>
-                {
-                  pastSeasons.map((year) => (
-                    <NavigationMenuLink
-                      key={year}
-                      href={`/seasons/${year}`}
-                    >
-                      {year} Season
-                    </NavigationMenuLink>
-                  ))
-                }
-              </div>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
-          {
-            currentRace ? (
-              <NavigationMenuItem>
-                <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`}>
-                  <Button className="bg-red-thm hover:bg-red-atv">{currentRace.name}</Button>
-                </NavigationMenuLink>
+    <div className="p-1 bg-navbar shadow-md relative z-50">
+      <div className="max-w-7xl mx-auto flex">
+        <Link href="/">
+          <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0 cursor-pointer"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
+        </Link>
+        <div className="grow" />
+        <NavigationMenu viewport={false}>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>This Season</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className="w-60 relative max-h-64 overflow-y-auto">
+                  <NavigationMenuLink href={`/${currentSeason}`} className="font-bold">View Season</NavigationMenuLink>
+                  {
+                    races?.map((race) => (
+                      <NavigationMenuLink
+                        key={race.name}
+                        href={`/seasons/${currentSeason}/${race.round}`}
+                      >
+                        <span className={race.state == 1 ? "text-neutral-400" : race.state == 0 ? "text-red-thm" : ""}>{race.name}</span>
+                        {
+                          race.state == 0 ? (
+                            <Badge className="bg-red-thm">Live</Badge>
+                          ) : <></>
+                        }
+                      </NavigationMenuLink>
+                    ))
+                  }
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Past Seasons</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div>
+                  {
+                    pastSeasons.map((year) => (
+                      <NavigationMenuLink
+                        key={year}
+                        href={`/seasons/${year}`}
+                      >
+                        {year} Season
+                      </NavigationMenuLink>
+                    ))
+                  }
+                </div>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+            {
+              currentRace ? (
+                <NavigationMenuItem>
+                  <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`}>
+                    <Button className="bg-red-thm hover:bg-red-atv">{currentRace.name}</Button>
+                  </NavigationMenuLink>
 
-              </NavigationMenuItem>
-            ) : (
-              <></>
-            )
-          }
+                </NavigationMenuItem>
+              ) : (
+                <></>
+              )
+            }
 
-        </NavigationMenuList>
-      </NavigationMenu>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
+
     </div>
 
   )

@@ -37,7 +37,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Navbar />
-            <div className="max-h-[calc(100vh-60px)] overflow-y-auto">
+            <div className="max-h-[calc(100vh-44px)] overflow-y-auto max-w-7xl mx-auto p-2">
               {children}
             </div>
 

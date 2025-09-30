@@ -201,7 +201,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
     }
   }, [driverData]);
   return (
-    <div className="w-full max-h-[calc(100vh-60px)] flex flex-col">
+    <div className="w-full max-h-[calc(100vh-44px)] flex flex-col">
       <div className="flex flex-row w-full p-3">
         <div className="flex flex-col">
           <h1 className="text-3xl font-bold">{race?.name}</h1>
@@ -281,21 +281,9 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       }
       {
         mode == "Lap-by-Lap" && (
-          <div className="overflow-y-hidden">
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 p-4 pr-0 bg-navbar shadow-xl rounded-l-[calc(var(--spacing)*14)] border">
-              { weather &&
-                ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
-                                    humidity={weather[lap].humidity} pressure={weather[lap].pressure}
-                                    rain={weather[lap].rain} windSpeed={weather[lap].windSpeed} windDir={weather[lap].windDir}/>
-                    : <Weather airTemp={weather[weather.length - 1].airTemp} trackTemp={weather[weather.length - 1].trackTemp}
-                               humidity={weather[weather.length - 1].humidity} pressure={weather[weather.length - 1].pressure}
-                                rain={weather[weather.length - 1].rain} windSpeed={weather[weather.length - 1].windSpeed} windDir={weather[weather.length - 1].windDir}/>
-                )
-              }
-            </div>
-
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-160px)] p-4 max-w-[calc(100vw-120px)] xl:max-w-auto xl:mr-auto xl:max-w-5xl xl:mx-auto">
-              <div className="flex flex-row">
+          <div className="overflow-y-hidden flex flex-row">
+            <div className="flex flex-row w-full">
+              <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex flex-row py-2">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -338,105 +326,116 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                   </TableBody>
                 </Table>
               </div>
-              <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar border-t shadow-lg p-1">
-                <Pagination>
-                  <PaginationContent>
-                    {lapData && (
-                      <>
-                        {/* First Lap */}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setLap(1)}
-                            isActive={lap === 1}
-                            style={{ cursor: lap === 1 ? "default" : "pointer" }}
-                          >
-                            &#171;
-                          </PaginationLink>
-                        </PaginationItem>
-                        {/* Previous Lap */}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setLap(Math.max(1, lap - 1))}
-                            isActive={false}
-                            style={{ cursor: lap === 1 ? "default" : "pointer" }}
-                          >
-                            &#8249;
-                          </PaginationLink>
-                        </PaginationItem>
-                        {/* Previous 5 laps */}
-                        {lap > 6 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                        {lapData
-                          .filter((d) => {
-                            const l = parseInt(d.lap);
-                            return l >= Math.max(1, lap - 5) && l < lap;
-                          })
-                          .map((d) => (
-                            <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
-                              <PaginationLink isActive={parseInt(d.lap) == lap}>
-                                {parseInt(d.lap)}
-                              </PaginationLink>
-                            </PaginationItem>
-                          ))}
-                        {/* Current lap */}
-                        <input
-                          type="number"
-                          min={1}
-                          max={lapData?.length || 1}
-                          value={lap}
-                          onChange={e => {
-                            const val = Number(e.target.value);
-                            if (!isNaN(val) && val >= 1 && val <= (lapData?.length || 1)) setLap(val);
-                          }}
-                          className="w-15 border rounded px-2 py-1 text-center"
-                          style={{ MozAppearance: "textfield" }}
-                        />
-                        {/* Next 5 laps */}
-                        {lapData
-                          .filter((d) => {
-                            const l = parseInt(d.lap);
-                            return l > lap && l <= lap + 5;
-                          })
-                          .map((d) => (
-                            <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
-                              <PaginationLink isActive={parseInt(d.lap) == lap}>
-                                {parseInt(d.lap)}
-                              </PaginationLink>
-                            </PaginationItem>
-                          ))}
-                        {lap < (lapData?.length || 0) - 5 && (
-                          <PaginationItem>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        )}
-                        {/* Next Lap */}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setLap(Math.min(lap + 1, lapData?.length || 1))}
-                            isActive={false}
-                            style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
-                          >
-                            &#8250;
-                          </PaginationLink>
-                        </PaginationItem>
-                        {/* Last Lap */}
-                        <PaginationItem>
-                          <PaginationLink
-                            onClick={() => setLap(lapData?.length || 1)}
-                            isActive={lap === (lapData?.length || 1)}
-                            style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
-                          >
-                            &#187;
-                          </PaginationLink>
-                        </PaginationItem>
-                      </>
-                    )}
-                  </PaginationContent>
-                </Pagination>
+              <div className="bg-navbar shadow-xl rounded-full border h-fit p-2 pb-6 my-auto">
+                { weather &&
+                  ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
+                                            humidity={weather[lap].humidity} pressure={weather[lap].pressure}
+                                            rain={weather[lap].rain} windSpeed={weather[lap].windSpeed} windDir={weather[lap].windDir}/>
+                      : <Weather airTemp={weather[weather.length - 1].airTemp} trackTemp={weather[weather.length - 1].trackTemp}
+                                 humidity={weather[weather.length - 1].humidity} pressure={weather[weather.length - 1].pressure}
+                                 rain={weather[weather.length - 1].rain} windSpeed={weather[weather.length - 1].windSpeed} windDir={weather[weather.length - 1].windDir}/>
+                  )
+                }
               </div>
+            </div>
+            <div className="absolute left-0 right-0 bottom-0 flex items-center gap-2 bg-navbar border-t shadow-lg p-1">
+              <Pagination>
+                <PaginationContent>
+                  {lapData && (
+                    <>
+                      {/* First Lap */}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setLap(1)}
+                          isActive={lap === 1}
+                          style={{ cursor: lap === 1 ? "default" : "pointer" }}
+                        >
+                          &#171;
+                        </PaginationLink>
+                      </PaginationItem>
+                      {/* Previous Lap */}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setLap(Math.max(1, lap - 1))}
+                          isActive={false}
+                          style={{ cursor: lap === 1 ? "default" : "pointer" }}
+                        >
+                          &#8249;
+                        </PaginationLink>
+                      </PaginationItem>
+                      {/* Previous 5 laps */}
+                      {lap > 6 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      {lapData
+                        .filter((d) => {
+                          const l = parseInt(d.lap);
+                          return l >= Math.max(1, lap - 5) && l < lap;
+                        })
+                        .map((d) => (
+                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
+                            <PaginationLink isActive={parseInt(d.lap) == lap}>
+                              {parseInt(d.lap)}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                      {/* Current lap */}
+                      <input
+                        type="number"
+                        min={1}
+                        max={lapData?.length || 1}
+                        value={lap}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          if (!isNaN(val) && val >= 1 && val <= (lapData?.length || 1)) setLap(val);
+                        }}
+                        className="w-15 border rounded px-2 py-1 text-center"
+                        style={{ MozAppearance: "textfield" }}
+                      />
+                      {/* Next 5 laps */}
+                      {lapData
+                        .filter((d) => {
+                          const l = parseInt(d.lap);
+                          return l > lap && l <= lap + 5;
+                        })
+                        .map((d) => (
+                          <PaginationItem key={d.lap} onClick={() => setLap(parseInt(d.lap))}>
+                            <PaginationLink isActive={parseInt(d.lap) == lap}>
+                              {parseInt(d.lap)}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                      {lap < (lapData?.length || 0) - 5 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+                      {/* Next Lap */}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setLap(Math.min(lap + 1, lapData?.length || 1))}
+                          isActive={false}
+                          style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
+                        >
+                          &#8250;
+                        </PaginationLink>
+                      </PaginationItem>
+                      {/* Last Lap */}
+                      <PaginationItem>
+                        <PaginationLink
+                          onClick={() => setLap(lapData?.length || 1)}
+                          isActive={lap === (lapData?.length || 1)}
+                          style={{ cursor: lap === (lapData?.length || 1) ? "default" : "pointer" }}
+                        >
+                          &#187;
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+                </PaginationContent>
+              </Pagination>
             </div>
           </div>
 
