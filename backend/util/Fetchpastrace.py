@@ -84,13 +84,6 @@ def weather_process(data: fastf1.core.Session): # pyright: ignore
     out = out.to_dict()
     return out
 
-def info_process(season: int, gp: int):
-    data = ergast.get_race_schedule(season, gp)
-    if len(data) == 0 or data is None:
-        return {}
-    print(data)
-    return data[0]
-
 def get_session_data(year: int ,gp: int, session_type: str):
     session = get_session(year, gp, session_type)
     try:
@@ -103,7 +96,6 @@ def get_session_data(year: int ,gp: int, session_type: str):
     out = {"laptime":{},
         "weather" : weather_process(session),
         "results" : results_process(session.results),
-        "info" : info_process(year, gp)
     }
 
     out["laptime"]["Data"] = laptime_process(session.laps, drivers, total_lap, True if session_type == "r" or session_type == "s" else False)
