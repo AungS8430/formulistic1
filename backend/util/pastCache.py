@@ -53,7 +53,7 @@ class data():
 
 
     @classmethod
-    def pass_data(cls, year: int ,gp: int, session_type: str, data: Literal["laptime", "weather", "results", "info"]):
+    def pass_data(cls, year: int ,gp: int, session_type: str, data: Literal["laptime", "weather", "results"]):
         out = cls.get_data(year, gp, session_type)
         if out != ["Error", "Data not found"]:
             out = out[data] # pyright: ignore

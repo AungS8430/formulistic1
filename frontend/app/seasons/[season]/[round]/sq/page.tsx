@@ -15,7 +15,6 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/info?year=${season}&gp=${round}`).then((response) => response.json()).then((content) => {
-      content = JSON.parse(content)
       let temp: { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number } = {
         round: parseInt(content.round ?? content.Round ?? content.roundNumber ?? "0"),
         name: content.raceName ?? content.name ?? "",

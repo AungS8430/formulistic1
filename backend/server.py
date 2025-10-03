@@ -4,7 +4,7 @@ from util.Livetiming import (
     get_session_info, get_track_status,
     get_race_control_messages
 )
-from util.FetchSeason import get_schedule
+from util.FetchSeason import get_schedule, get_race
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -91,7 +91,7 @@ async def session_results(year: int=2025, gp: int=1, session: str="r"):
 
 @app.get("/session/info")
 async def session_info(year: int=2025, gp: int=1, session: str="r"):
-    return data.pass_data(year, gp, session, "info")
+    return get_race(year, gp)
 
 @app.get("/season/schedule")
 async def season_schedule(year: int=2025):
