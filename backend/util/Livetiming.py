@@ -66,6 +66,11 @@ class RaceData:
                 "interval_to_ahead": None,
                 "number_of_laps": 0,
                 "in_pit": False,
+                "pit_out": False,
+                "retired": False,
+                "stopped": False,
+                "show_position": True,
+                "racing_number": None,
                 "status": None,
                 "sectors": {
                     "0": {"value": None, "segments": {}},
@@ -142,14 +147,26 @@ class RaceData:
 
             # Update tire stints information
             if "Stints" in driver_data:
-                driver_state["stints"] = driver_data["Stints"]
+                stints = driver_data["Stints"]
+                driver_state["stints"] = stints
 
-                # Extract current tire compound from the latest stint
-                latest_stint = max(driver_data["Stints"].keys(), key=int) if driver_data["Stints"] else None
-                if latest_stint and "Compound" in driver_data["Stints"][latest_stint]:
-                    driver_state["current_compound"] = driver_data["Stints"][latest_stint]["Compound"]
-                    driver_state["new_tires"] = driver_data["Stints"][latest_stint].get("New", "false") == "true"
-                    driver_state["tire_laps"] = driver_data["Stints"][latest_stint].get("TotalLaps", 0)
+                # Handle stints as a dict (e.g., {"0": {...}, "1": {...}})
+                if isinstance(stints, dict) and stints:
+                    # Extract current tire compound from the latest stint
+                    latest_stint = max(stints.keys(), key=int)
+                    if "Compound" in stints[latest_stint]:
+                        driver_state["current_compound"] = stints[latest_stint]["Compound"]
+                        driver_state["new_tires"] = stints[latest_stint].get("New", "false") == "true"
+                        driver_state["tire_laps"] = stints[latest_stint].get("TotalLaps", 0)
+                
+                # Handle stints as a list (e.g., [{...}, {...}])
+                elif isinstance(stints, list) and stints:
+                    # Extract current tire compound from the latest stint
+                    latest_stint = stints[-1]
+                    if "Compound" in latest_stint:
+                        driver_state["current_compound"] = latest_stint["Compound"]
+                        driver_state["new_tires"] = latest_stint.get("New", "false") == "true"
+                        driver_state["tire_laps"] = latest_stint.get("TotalLaps", 0)
 
     def _update_timing_data(self, data: Dict[str, Any]):
         """Update timing data for drivers."""
@@ -164,6 +181,18 @@ class RaceData:
                 driver_state["position"] = driver_data["Position"]
             if "Line" in driver_data:
                 driver_state["line"] = driver_data["Line"]
+
+            # Update additional fields
+            if "RacingNumber" in driver_data:
+                driver_state["racing_number"] = driver_data["RacingNumber"]
+            if "ShowPosition" in driver_data:
+                driver_state["show_position"] = driver_data["ShowPosition"]
+            if "Retired" in driver_data:
+                driver_state["retired"] = driver_data["Retired"]
+            if "PitOut" in driver_data:
+                driver_state["pit_out"] = driver_data["PitOut"]
+            if "Stopped" in driver_data:
+                driver_state["stopped"] = driver_data["Stopped"]
 
             # Update timing information
             if "LastLapTime" in driver_data:
@@ -191,14 +220,46 @@ class RaceData:
             if "Status" in driver_data:
                 driver_state["status"] = driver_data["Status"]
 
-            # Update sector data
+            # Update sector data - handle both list and dict formats
             if "Sectors" in driver_data:
-                for sector_num, sector_data in driver_data["Sectors"].items():
-                    if sector_num in driver_state["sectors"]:
-                        if "Value" in sector_data:
-                            driver_state["sectors"][sector_num]["value"] = sector_data["Value"]
-                        if "Segments" in sector_data:
-                            driver_state["sectors"][sector_num]["segments"] = sector_data["Segments"]
+                sectors = driver_data["Sectors"]
+                
+                # Handle sectors as a list (e.g., [{...}, {...}, {...}])
+                if isinstance(sectors, list):
+                    for idx, sector_data in enumerate(sectors):
+                        sector_num = str(idx)
+                        if sector_num in driver_state["sectors"]:
+                            if "Value" in sector_data:
+                                driver_state["sectors"][sector_num]["value"] = sector_data["Value"]
+                            if "Segments" in sector_data:
+                                driver_state["sectors"][sector_num]["segments"] = sector_data["Segments"]
+                            # Store additional sector metadata
+                            if "Status" in sector_data:
+                                driver_state["sectors"][sector_num]["status"] = sector_data["Status"]
+                            if "Stopped" in sector_data:
+                                driver_state["sectors"][sector_num]["stopped"] = sector_data["Stopped"]
+                            if "OverallFastest" in sector_data:
+                                driver_state["sectors"][sector_num]["overall_fastest"] = sector_data["OverallFastest"]
+                            if "PersonalFastest" in sector_data:
+                                driver_state["sectors"][sector_num]["personal_fastest"] = sector_data["PersonalFastest"]
+                
+                # Handle sectors as a dict (e.g., {"0": {...}, "1": {...}, "2": {...}})
+                elif isinstance(sectors, dict):
+                    for sector_num, sector_data in sectors.items():
+                        if sector_num in driver_state["sectors"]:
+                            if "Value" in sector_data:
+                                driver_state["sectors"][sector_num]["value"] = sector_data["Value"]
+                            if "Segments" in sector_data:
+                                driver_state["sectors"][sector_num]["segments"] = sector_data["Segments"]
+                            # Store additional sector metadata
+                            if "Status" in sector_data:
+                                driver_state["sectors"][sector_num]["status"] = sector_data["Status"]
+                            if "Stopped" in sector_data:
+                                driver_state["sectors"][sector_num]["stopped"] = sector_data["Stopped"]
+                            if "OverallFastest" in sector_data:
+                                driver_state["sectors"][sector_num]["overall_fastest"] = sector_data["OverallFastest"]
+                            if "PersonalFastest" in sector_data:
+                                driver_state["sectors"][sector_num]["personal_fastest"] = sector_data["PersonalFastest"]
 
             # Update speeds
             if "Speeds" in driver_data:
@@ -223,21 +284,44 @@ class RaceData:
     def _update_race_control(self, data: Dict[str, Any]):
         """Update race control messages."""
         if "Messages" in data:
-            for msg_id, message in data["Messages"].items():
-                # Add message ID and store
-                message["message_id"] = msg_id
-                self.race_control_messages.append(message)
+            messages = data["Messages"]
+            
+            # Handle Messages as a list
+            if isinstance(messages, list):
+                for message in messages:
+                    # Store the message with default ID if not present
+                    if "message_id" not in message:
+                        message["message_id"] = str(len(self.race_control_messages))
+                    self.race_control_messages.append(message)
 
-                # Update track flags if it's a flag message
-                if message.get("Category") == "Flag" and "Flag" in message:
-                    flag_info = {
-                        "type": message["Flag"],
-                        "scope": message.get("Scope", "Unknown"),
-                        "message": message.get("Message", ""),
-                        "timestamp": message.get("Utc", ""),
-                        "lap": message.get("Lap", 0)
-                    }
-                    self.track["flags"].append(flag_info)
+                    # Update track flags if it's a flag message
+                    if message.get("Category") == "Flag" and "Flag" in message:
+                        flag_info = {
+                            "type": message["Flag"],
+                            "scope": message.get("Scope", "Unknown"),
+                            "message": message.get("Message", ""),
+                            "timestamp": message.get("Utc", ""),
+                            "lap": message.get("Lap", 0)
+                        }
+                        self.track["flags"].append(flag_info)
+            
+            # Handle Messages as a dict
+            elif isinstance(messages, dict):
+                for msg_id, message in messages.items():
+                    # Add message ID and store
+                    message["message_id"] = msg_id
+                    self.race_control_messages.append(message)
+
+                    # Update track flags if it's a flag message
+                    if message.get("Category") == "Flag" and "Flag" in message:
+                        flag_info = {
+                            "type": message["Flag"],
+                            "scope": message.get("Scope", "Unknown"),
+                            "message": message.get("Message", ""),
+                            "timestamp": message.get("Utc", ""),
+                            "lap": message.get("Lap", 0)
+                        }
+                        self.track["flags"].append(flag_info)
 
     def _update_track_status(self, data: Dict[str, Any]):
         """Update track status information."""
@@ -263,10 +347,19 @@ class RaceData:
     def _update_session_data(self, data: Dict[str, Any]):
         """Update session status information."""
         if "StatusSeries" in data:
-            # Get the latest status update
-            for status_id, status_data in data["StatusSeries"].items():
-                if "SessionStatus" in status_data:
-                    self.session["session_status"] = status_data["SessionStatus"]
+            status_series = data["StatusSeries"]
+            
+            # Handle StatusSeries as a list
+            if isinstance(status_series, list):
+                for status_data in status_series:
+                    if "SessionStatus" in status_data:
+                        self.session["session_status"] = status_data["SessionStatus"]
+            
+            # Handle StatusSeries as a dict
+            elif isinstance(status_series, dict):
+                for status_id, status_data in status_series.items():
+                    if "SessionStatus" in status_data:
+                        self.session["session_status"] = status_data["SessionStatus"]
 
     def _update_lap_count(self, data: Dict[str, Any]):
         """Update current lap count."""
