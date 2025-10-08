@@ -3,6 +3,9 @@ import json
 import os
 import asyncio
 from typing import Dict, List, Any, Optional
+import fastf1
+from fastf1.plotting import get_compound_mapping
+from datetime import datetime
 
 class RaceData:
     """Structured F1 race data container that organizes live timing information by category."""
@@ -13,10 +16,10 @@ class RaceData:
 
         # Session information
         self.session = {
-            "current_lap": 1,
+            "current_lap": None,
             "session_status": "Unknown",
             "session_info": {},
-            "session_name": None,         # <-- Add session_name
+            "session_name": None,
             "remaining_time": None,
             "extrapolating": None,
             "clock_utc": None,
@@ -106,7 +109,19 @@ class RaceData:
         elif message_type == "LapCount":
             self._update_lap_count(data)
         elif message_type == "DriverList":
-            self.driver_list = data
+            if data:
+                for car_num, new_info in data.items():
+                    if car_num in self.driver_list:
+                        # Only update if new_info is more complete
+                        if len(new_info.keys()) > len(self.driver_list[car_num].keys()):
+                            self.driver_list[car_num] = new_info
+                        else:
+                            # Merge keys, but don't overwrite richer info with minimal info
+                            for k, v in new_info.items():
+                                if v is not None:
+                                    self.driver_list[car_num][k] = v
+                    else:
+                        self.driver_list[car_num] = new_info
         elif message_type == "TopThree":
             self.top_three = data
         elif message_type == "TimingStats":
@@ -176,6 +191,9 @@ class RaceData:
         for car_number, driver_data in data["Lines"].items():
             driver_state = self.get_driver_state(car_number)
 
+            # Track previous sector 2 value to detect new lap
+            prev_sector3_value = driver_state["sectors"]["2"].get("value")
+
             # Update position and line
             if "Position" in driver_data:
                 driver_state["position"] = driver_data["Position"]
@@ -223,17 +241,23 @@ class RaceData:
             # Update sector data - handle both list and dict formats
             if "Sectors" in driver_data:
                 sectors = driver_data["Sectors"]
-                
-                # Handle sectors as a list (e.g., [{...}, {...}, {...}])
+                # For list format
                 if isinstance(sectors, list):
                     for idx, sector_data in enumerate(sectors):
                         sector_num = str(idx)
                         if sector_num in driver_state["sectors"]:
-                            if "Value" in sector_data:
+                            # If sector 1 laptime is inputted, reset sector 2 and 3 laptimes and segments
+                            if sector_num == "0" and "Value" in sector_data and sector_data["Value"]:
+                                driver_state["sectors"]["1"]["value"] = None
+                                driver_state["sectors"]["2"]["value"] = None
+                                driver_state["sectors"]["1"]["segments"] = {}
+                                driver_state["sectors"]["2"]["segments"] = {}
+                            if "Value" in sector_data and sector_data["Value"]:
                                 driver_state["sectors"][sector_num]["value"] = sector_data["Value"]
-                            if "Segments" in sector_data:
-                                driver_state["sectors"][sector_num]["segments"] = sector_data["Segments"]
-                            # Store additional sector metadata
+                            # Update current sector's segments (retain previous unless explicitly updated)
+                            if "Segments" in sector_data and sector_data["Segments"]:
+                                for seg_key, seg_val in sector_data["Segments"].items():
+                                    driver_state["sectors"][sector_num]["segments"][seg_key] = seg_val
                             if "Status" in sector_data:
                                 driver_state["sectors"][sector_num]["status"] = sector_data["Status"]
                             if "Stopped" in sector_data:
@@ -242,16 +266,22 @@ class RaceData:
                                 driver_state["sectors"][sector_num]["overall_fastest"] = sector_data["OverallFastest"]
                             if "PersonalFastest" in sector_data:
                                 driver_state["sectors"][sector_num]["personal_fastest"] = sector_data["PersonalFastest"]
-                
-                # Handle sectors as a dict (e.g., {"0": {...}, "1": {...}, "2": {...}})
+                # For dict format
                 elif isinstance(sectors, dict):
                     for sector_num, sector_data in sectors.items():
                         if sector_num in driver_state["sectors"]:
-                            if "Value" in sector_data:
+                            # If sector 1 laptime is inputted, reset sector 2 and 3 laptimes and segments
+                            if sector_num == "0" and "Value" in sector_data and sector_data["Value"]:
+                                driver_state["sectors"]["1"]["value"] = None
+                                driver_state["sectors"]["2"]["value"] = None
+                                driver_state["sectors"]["1"]["segments"] = {}
+                                driver_state["sectors"]["2"]["segments"] = {}
+                            if "Value" in sector_data and sector_data["Value"]:
                                 driver_state["sectors"][sector_num]["value"] = sector_data["Value"]
-                            if "Segments" in sector_data:
-                                driver_state["sectors"][sector_num]["segments"] = sector_data["Segments"]
-                            # Store additional sector metadata
+                            # Update current sector's segments (retain previous unless explicitly updated)
+                            if "Segments" in sector_data and sector_data["Segments"]:
+                                for seg_key, seg_val in sector_data["Segments"].items():
+                                    driver_state["sectors"][sector_num]["segments"][seg_key] = seg_val
                             if "Status" in sector_data:
                                 driver_state["sectors"][sector_num]["status"] = sector_data["Status"]
                             if "Stopped" in sector_data:
@@ -260,6 +290,12 @@ class RaceData:
                                 driver_state["sectors"][sector_num]["overall_fastest"] = sector_data["OverallFastest"]
                             if "PersonalFastest" in sector_data:
                                 driver_state["sectors"][sector_num]["personal_fastest"] = sector_data["PersonalFastest"]
+
+            # Detect new lap completion (sector 2 value changes from None or previous value)
+            curr_sector3_value = driver_state["sectors"]["2"].get("value")
+            if curr_sector3_value and curr_sector3_value != prev_sector3_value:
+                # Increment tire_laps if not just pitted (will be overwritten by stints if so)
+                driver_state["tire_laps"] = driver_state.get("tire_laps", 0) + 1
 
             # Update speeds
             if "Speeds" in driver_data:
@@ -346,20 +382,25 @@ class RaceData:
 
     def _update_session_data(self, data: Dict[str, Any]):
         """Update session status information."""
+        reset_triggered = False
         if "StatusSeries" in data:
             status_series = data["StatusSeries"]
-            
             # Handle StatusSeries as a list
             if isinstance(status_series, list):
                 for status_data in status_series:
                     if "SessionStatus" in status_data:
                         self.session["session_status"] = status_data["SessionStatus"]
-            
+                        if status_data["SessionStatus"] == "Ends":
+                            reset_triggered = True
             # Handle StatusSeries as a dict
             elif isinstance(status_series, dict):
                 for status_id, status_data in status_series.items():
                     if "SessionStatus" in status_data:
                         self.session["session_status"] = status_data["SessionStatus"]
+                        if status_data["SessionStatus"] == "Ends":
+                            reset_triggered = True
+        if reset_triggered:
+            self.reset_all_data()
 
     def _update_lap_count(self, data: Dict[str, Any]):
         """Update current lap count."""
@@ -378,6 +419,39 @@ class RaceData:
             "top_three": self.top_three,
             "last_updated": self.last_updated
         }
+
+    def reset_all_data(self):
+        """Reset all race/session/driver data structures."""
+        self.drivers.clear()
+        self.session = {
+            "current_lap": None,
+            "session_status": "Unknown",
+            "session_info": {},
+            "session_name": None,
+            "remaining_time": None,
+            "extrapolating": None,
+            "clock_utc": None,
+        }
+        self.track = {
+            "status": "Unknown",
+            "status_name": "Unknown",
+            "status_message": "",
+            "flags": [],
+            "weather": {
+                "air_temp": None,
+                "track_temp": None,
+                "humidity": None,
+                "pressure": None,
+                "wind_speed": None,
+                "wind_direction": None,
+                "rainfall": None
+            }
+        }
+        self.race_control_messages.clear()
+        self.timing_stats = {}
+        self.driver_list = {}
+        self.top_three = {}
+        self.last_updated = None
 
 def parse_message(msg):
     """Normalize a message into dict form (optional)."""
@@ -472,3 +546,34 @@ def get_race_control_messages(limit: int = 10):
 def get_session_name():
     """Return the session name as a string."""
     return race_data.get_session_name()
+
+def get_compounds():
+    """Get tire compound mapping."""
+    try:
+        session = fastf1.get_session(
+            datetime.now().year,
+            race_data.session["session_info"].get("Meeting", {}).get("Number"),
+            'r'
+        )
+        compound_colors = get_compound_mapping(session)
+        out = {}
+        compound_abv = {
+            "SOFT": "S",
+            "MEDIUM": "M",
+            "HARD": "H",
+            "INTERMEDIATE": "I",
+            "WET": "W",
+            "DRY": "D",
+            "SUPERSOFT": "SS",
+            "ULTRASOFT": "US",
+            "HYPERSOFT": "HS",
+            "SUPERHARD": "SH",
+        }
+        for (key, value) in compound_colors.items():
+            out[key] = {
+                "color": value,
+                "abbreviation": compound_abv[key] if key in compound_abv else key
+            }
+        return out
+    except Exception:
+        return {}
