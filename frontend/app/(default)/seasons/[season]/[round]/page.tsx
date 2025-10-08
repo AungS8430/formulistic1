@@ -4,6 +4,7 @@ import {use, useEffect, useState} from "react";
 import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import {redirect, RedirectType} from "next/navigation";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function SeasonPage({ params }: { params: Promise<{ season: string, round: string }> }) {
   const { season, round } = use(params)
@@ -69,15 +70,15 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
 
 
 
-  return (
+  return race ? (
     <div className="max-w-full lg:max-w-[80%] xl:max-w-[60%] mx-auto p-2 md:p-8 flex flex-col gap-4">
       <div>
         <div className="flex flex-col sm:flex-row md:gap-2">
-          <h1 className="text-2xl md:text-4xl font-bold">{season} {race?.name}</h1>
-          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md font-bold">Race Weekend</Badge> : <></>}
+          <h1 className="text-2xl md:text-4xl">{season} {race?.name}</h1>
+          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md">Race Weekend</Badge> : <></>}
           <div className="grow"></div>
         </div>
-        <h3 className="text-md md:text-lg text-neutral-400 my-auto font-semibold">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
+        <h3 className="text-md md:text-lg text-neutral-400 my-auto">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
       </div>
 
       <div>
@@ -95,7 +96,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
                 race?.fp1 ? (
                   // <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp1`, RedirectType.push)}>
                   <TableRow>
-                    <TableCell className="font-semibold">Free Practice 1</TableCell>
+                    <TableCell>Free Practice 1</TableCell>
                     <TableCell>{race.fp1}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -104,7 +105,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
                 race?.fp2 ? (
                   // <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp2`, RedirectType.push)}>
                   <TableRow>
-                    <TableCell className="font-semibold">Free Practice 2</TableCell>
+                    <TableCell>Free Practice 2</TableCell>
                     <TableCell>{race.fp2}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -113,7 +114,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
                 race?.fp3 ? (
                   // <TableRow onClick={() => redirect(`/seasons/${season}/${round}/fp3`, RedirectType.push)}>
                   <TableRow>
-                    <TableCell className="font-semibold">Free Practice 3</TableCell>
+                    <TableCell>Free Practice 3</TableCell>
                     <TableCell>{race.fp3}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -121,7 +122,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               {
                 race?.sq ? (
                   <TableRow onClick={() => redirect(`/seasons/${season}/${round}/sq`, RedirectType.push)}>
-                    <TableCell className="font-semibold">{parseInt(season) === 2023 ? "Sprint Shootout" : "Sprint Qualifying"}</TableCell>
+                    <TableCell>{parseInt(season) === 2023 ? "Sprint Shootout" : "Sprint Qualifying"}</TableCell>
                     <TableCell>{race.sq}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -129,7 +130,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               {
                 race?.sprint ? (
                   <TableRow onClick={() => redirect(`/seasons/${season}/${round}/sprint`, RedirectType.push)}>
-                    <TableCell className="font-semibold">Sprint</TableCell>
+                    <TableCell>Sprint</TableCell>
                     <TableCell>{race.sprint}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -137,7 +138,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               {
                 race?.quali ? (
                   <TableRow onClick={() => redirect(`/seasons/${season}/${round}/quali`, RedirectType.push)}>
-                    <TableCell className="font-semibold">Qualifying</TableCell>
+                    <TableCell>Qualifying</TableCell>
                     <TableCell>{race.quali}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -145,7 +146,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               {
                 race?.race ? (
                   <TableRow onClick={() => redirect(`/seasons/${season}/${round}/race`, RedirectType.push)}>
-                    <TableCell className="font-semibold">Race</TableCell>
+                    <TableCell>Race</TableCell>
                     <TableCell>{race.race}</TableCell>
                   </TableRow>
                 ) : <></>
@@ -155,5 +156,9 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
         </div>
       </div>
     </div>
-  );
+  ) : (
+    <div className="flex h-[calc(100vh-60px)] flex-col items-center justify-center">
+      <Spinner className="w-16 h-16" />
+    </div>
+  )
 }

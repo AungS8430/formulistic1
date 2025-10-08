@@ -14,6 +14,7 @@ import {
 import {redirect, RedirectType} from "next/navigation";
 import Compound from "@/components/compound";
 import Weather from "@/components/weather";
+import { Spinner} from "@/components/ui/spinner";
 
 export default function PastStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params);
@@ -199,7 +200,7 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       setLapData(ltemp);
     }
   }, [driverData]);
-  return (
+  return race && data ? (
     <div className="w-full max-h-[calc(100vh-44px)] flex flex-col">
       <div className="flex flex-col sm:flex-row w-full px-3 pb-3">
         <div className="flex flex-col">
@@ -443,6 +444,10 @@ export default function PastStats({ params }: { params: Promise<{ season: string
 
         )
       }
+    </div>
+  ) : (
+    <div className="w-full h-[calc(100vh-44px)] flex items-center justify-center">
+      <Spinner className="w-16 h-16" />
     </div>
   )
 }
