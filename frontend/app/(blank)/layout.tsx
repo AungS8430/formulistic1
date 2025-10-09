@@ -2,13 +2,12 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/navbar";
-import "./globals.css";
+import "../globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -39,8 +38,7 @@ export default function RootLayout({
         enableSystem
         disableTransitionOnChange
       >
-        <Navbar />
-        <div className="max-h-[calc(100vh-44px)] overflow-y-auto max-w-7xl mx-auto px-2 sm:px-4">
+        <div>
           {children}
         </div>
       </ThemeProvider>

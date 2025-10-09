@@ -58,7 +58,7 @@ export default function Navbar() {
   )
   return (
     <div className="p-1 bg-navbar shadow-md relative z-50">
-      <div className="max-w-7xl mx-auto flex h-[36px]">
+      <div className="max-w-5xl mx-auto flex h-[36px]">
         <Link href="/">
           <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0 cursor-pointer"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
         </Link>

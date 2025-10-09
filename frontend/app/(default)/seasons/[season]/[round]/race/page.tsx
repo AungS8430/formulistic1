@@ -5,7 +5,7 @@ import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
+import { Spinner} from "@/components/ui/spinner";
 
 export default function QualiStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params)
@@ -67,7 +67,7 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
       };
       setRace(temp)
     })
-    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=s`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=r`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
       let temp: { name: string, dnumber: string, team: string, color: string, position: number, grid: number | null, time: number | null, note: string | null }[] = [];
@@ -90,20 +90,20 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
     })
   }, [season, round]);
 
-  return (
-    <div className="max-w-full lg:max-w-[80%] xl:max-w-[60%] mx-auto p-2 md:p-8 flex flex-col gap-4">
+  return race && data ? (
+    <div className="w-3xl mx-auto p-2 md:p-8 flex flex-col gap-4">
       <div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <h1 className="text-2xl md:text-4xl font-bold">{season} {race?.name}</h1>
-          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md font-bold">Race Weekend</Badge> : <></>}
+          <h1 className="text-2xl md:text-4xl">{season} {race?.name}</h1>
+          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md">Race Weekend</Badge> : <></>}
           <div className="grow"></div>
         </div>
-        <h3 className="text-md md:text-lg text-neutral-400 my-auto font-semibold">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
+        <h3 className="text-md md:text-lg text-neutral-400 my-auto">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
       </div>
       <div>
         <div className="gap-2 inline-flex">
-          <h2 className="text-lg md:text-xl font-semibold">Sprint Results</h2>
-          <Link href={`/seasons/${season}/${round}/sprint/stats`}>
+          <h2 className="text-lg md:text-xl font-semibold">Race Results</h2>
+          <Link href={`/seasons/${season}/${round}/race/stats`}>
             <Button variant="link" className="-m-1 hover:cursor-pointer">View Stats</Button>
           </Link>
 
@@ -135,6 +135,10 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
           </Table>
         </div>
       </div>
+    </div>
+  ) : (
+    <div className="flex h-[calc(100vh-60px)] flex-col items-center justify-center">
+      <Spinner className="w-16 h-16" />
     </div>
   )
 }

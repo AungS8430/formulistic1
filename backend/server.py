@@ -2,19 +2,31 @@ from util.pastCache import data
 from util.Livetiming import (
     file_watcher, background_file_reader, get_race_data,
     get_session_info, get_track_status,
-    get_race_control_messages
+    get_race_control_messages, get_compounds
 )
 from util.FetchSeason import get_schedule, get_race
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastf1.livetiming.client import SignalRClient
 from contextlib import asynccontextmanager
 import asyncio
 import os
+import threading
 
+FILE_PATH = "fake_saved_data.txt"  # Set this to your real file
 
-FILE_PATH = "fake_saved_data.txt" # change it to saved_data.txt to read actual data
-
+# def livetiming_recorder_loop():
+#     client = SignalRClient(FILE_PATH, filemode='a')
+#     while True:
+#         try:
+#             client.start()
+#             while client.is_running:
+#                 pass  # Busy wait, fast reconnect
+#         except Exception as e:
+#             print(f"Recorder error: {e}")
+#         finally:
+#             client.stop()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,15 +40,17 @@ async def lifespan(app: FastAPI):
                 break
             except Exception:
                 await asyncio.sleep(0.001)
+    # Start the FastF1 recorder in a background thread
+    # threading.Thread(target=livetiming_recorder_loop, daemon=True).start()
+    # Start your file reader as before
     asyncio.create_task(background_file_reader(FILE_PATH))
     yield
 
-
 app = FastAPI(lifespan=lifespan)
 
-
 origins = [
-    "https://formulistic1.aungs.eu.org"
+    "https://formulistic1.aungs.eu.org",
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -47,47 +61,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/stream")
 async def stream(format: str = Query("structured", description="Stream format: 'structured' for race data, 'raw' for original messages")):
     return StreamingResponse(file_watcher(format), media_type="text/event-stream")
 
-# New structured race data endpoints
-@app.get("/race/data")
-async def race_data():
-    """Get complete structured race data including drivers, session, track status."""
-    return get_race_data()
-
-@app.get("/race/session")
-async def session_data():
-    """Get current session information including lap count and status."""
-    return get_session_info()
-
-@app.get("/race/track")
-async def track_data():
-    """Get track status, weather, and flag information."""
-    return get_track_status()
-
-@app.get("/race/messages")
-async def race_messages(limit: int = Query(10, ge=1, le=50, description="Number of recent messages to return")):
-    """Get recent race control messages."""
-    return get_race_control_messages(limit)
-
+@app.get("/stream/compounds")
+async def stream_compounds():
+    return get_compounds()
 
 @app.get("/session/laptimes")
 async def session_laptimes(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "laptime")
 
-
 @app.get("/session/weatherdata")
 async def session_weatherdata(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "weather")
 
-
 @app.get("/session/results")
 async def session_results(year: int=2025, gp: int=1, session: str="r"):
     return data.pass_data(year, gp, session, "results")
-
 
 @app.get("/session/info")
 async def session_info(year: int=2025, gp: int=1, session: str="r"):

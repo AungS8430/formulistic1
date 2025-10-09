@@ -74,7 +74,7 @@ export default function Weather({ airTemp, trackTemp, humidity, pressure, rain, 
         ) : (
           <div className="flex flex-col items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 text-green-400">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15zM16 13l-1.5 1.5M16 17l-1.5 1.5M12.75 15l-1.5 1.5M12.75 19l-1.5 1.5M8.5 15L7 16.5M8.5 19L7 20.5" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h13a3 3 0 100-6 3 3 0 00-2.83 2M3 18h9a2 2 0 100-4 2 2 0 00-1.85 1" />
             </svg>
             <span className="text-sm font-bold text-green-400">CALM</span>
           </div>

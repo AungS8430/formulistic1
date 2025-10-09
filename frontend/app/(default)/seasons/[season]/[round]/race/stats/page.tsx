@@ -1,6 +1,6 @@
 "use client";
 
-import {use, useEffect, useState} from "react";
+import React, {use, useEffect, useState} from "react";
 import {Button} from "@/components/ui/button";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
@@ -14,6 +14,7 @@ import {
 import {redirect, RedirectType} from "next/navigation";
 import Compound from "@/components/compound";
 import Weather from "@/components/weather";
+import { Spinner} from "@/components/ui/spinner";
 
 export default function PastStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params);
@@ -199,11 +200,11 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       setLapData(ltemp);
     }
   }, [driverData]);
-  return (
+  return race && data ? (
     <div className="w-full max-h-[calc(100vh-44px)] flex flex-col">
-      <div className="flex flex-col sm:flex-row w-full px-3 pb-3">
+      <div className="flex flex-col sm:flex-row w-full px-3 pb-3 pt-2">
         <div className="flex flex-col">
-          <h1 className="text-2xl md:text-3xl font-bold">{race?.name}</h1>
+          <h1 className="text-2xl md:text-3xl">{race?.name}<span className="text-lg"> · Race</span></h1>
           <h2 className="text-xs md:text-lg text-neutral-400">{race?.startDate} - {race?.endDate} · {race?.circuit}</h2>
         </div>
         <div className="grow" />
@@ -231,10 +232,10 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                 ))}
               </div>
             </div>
-            <div className="w-full overflow-y-scroll max-h-[calc(100vh-132px)] p-4 xl:max-w-5xl mx-auto">
+            <div className="w-full overflow-y-scroll max-h-[calc(100vh-132px)] p-2 xl:max-w-5xl mx-auto">
               <h3 className="font-semibold text-lg">{ data?.filter((d) => parseInt(d.dnumber) == driver)[0].name }'s data</h3>
-              <div className="overflow-x-auto">
-                <Table className="min-w-[600px]">
+              <div className="overflow-x-auto border rounded-lg w-3xl">
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Lap</TableHead>
@@ -244,7 +245,6 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                       <TableHead>Sector 2</TableHead>
                       <TableHead>Sector 3</TableHead>
                       <TableHead>Compound</TableHead>
-                      <TableHead>Tyre Life</TableHead>
                       <TableHead>Pit</TableHead>
                       <TableHead>Interval</TableHead>
                     </TableRow>
@@ -259,15 +259,15 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                           <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s1 == parseInt(row.lap) ? parseInt(fastest?.s1 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                           <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s2 == parseInt(row.lap) ? parseInt(fastest?.s2 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                           <TableCell className={driverData?.filter(d => d.dnumber == driver)[0]?.fastest.s3 == parseInt(row.lap) ? parseInt(fastest?.s3 || "0") == driver ? "text-purple-500" : "text-green-500" : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                          <TableCell>
+                          <TableCell className="flex flex-row">
                             {compounds && compounds[row.compound] && (
                               <Compound
                                 abbreviation={compounds[row.compound].abbreviation}
                                 color={compounds[row.compound].color}
                               />
                             )}
+                            <span className="mt-0.5"> - {row.tyreLife} L</span>
                           </TableCell>
-                          <TableCell>{row.tyreLife}</TableCell>
                           <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
                           <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
                         </TableRow>
@@ -276,7 +276,6 @@ export default function PastStats({ params }: { params: Promise<{ season: string
                   </TableBody>
                 </Table>
               </div>
-
             </div>
           </div>
         )
@@ -284,51 +283,58 @@ export default function PastStats({ params }: { params: Promise<{ season: string
       {
         mode == "Lap-by-Lap" && (
           <div className="overflow-y-hidden flex flex-col sm:flex-row">
-            <div className="flex flex-col sm:flex-row w-full gap-2">
-              <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex flex-col sm:flex-row py-2 overflow-x-auto">
-                <Table className="min-w-[600px] text-xs md:text-sm">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Pos.</TableHead>
-                      <TableHead>Driver</TableHead>
-                      <TableHead>Laptime</TableHead>
-                      <TableHead>Sector 1</TableHead>
-                      <TableHead>Sector 2</TableHead>
-                      <TableHead>Sector 3</TableHead>
-                      <TableHead>Compound</TableHead>
-                      <TableHead>Tyre Life</TableHead>
-                      <TableHead>Pit Time</TableHead>
-                      <TableHead>Interval</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {
-                      lapData?.filter(l => parseInt(l.lap) == lap)[0]?.drivers.map((row) => (
-                        <TableRow key={row.dnumber}>
-                          <TableCell>{row.position}</TableCell>
-                          <TableCell className="font-semibold" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>{row.dnumber} {(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</TableCell>
-                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.lap == lap ? (parseInt(fastest?.lap || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s1 == lap ? (parseInt(fastest?.s1 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s2 == lap ? (parseInt(fastest?.s2 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                          <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s3 == lap ? (parseInt(fastest?.s3 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                          <TableCell>
-                            {compounds && compounds[row.compound] && (
-                              <Compound
-                                abbreviation={compounds[row.compound].abbreviation}
-                                color={compounds[row.compound].color}
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell>{row.tyreLife}</TableCell>
-                          <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                          <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
-                        </TableRow>
-                      ))
-                    }
-                  </TableBody>
-                </Table>
+            <div className="flex flex-col sm:flex-row w-5xl gap-2">
+              <div className="w-full">
+                <div className="w-full overflow-y-scroll max-h-[calc(100vh-180px)] flex overflow-x-auto border rounded-lg">
+                  <Table className="min-w-[600px] text-xs md:text-sm">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Pos.</TableHead>
+                        <TableHead>Driver</TableHead>
+                        <TableHead>Laptime</TableHead>
+                        <TableHead>Sector 1</TableHead>
+                        <TableHead>Sector 2</TableHead>
+                        <TableHead>Sector 3</TableHead>
+                        <TableHead>Compound</TableHead>
+                        <TableHead>Pit Time</TableHead>
+                        <TableHead>Interval</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {
+                        lapData?.filter(l => parseInt(l.lap) == lap)[0]?.drivers.map((row) => (
+                          <TableRow key={row.dnumber}>
+                            <TableCell>{row.position}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-row items-center gap-2 text" style={{ color: `#${(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0])?.color}`}}>
+                                <div className="w-8 text-right">{row.dnumber}</div>
+                                <div className="font-bold">{(data?.filter((d) => parseInt(d.dnumber) == row.dnumber)[0].code)}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.lap == lap ? (parseInt(fastest?.lap || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.laptime !== null ? `${Math.floor(row.laptime / 60)}:${(row.laptime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                            <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s1 == lap ? (parseInt(fastest?.s1 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s1 !== null ? `${Math.floor(row.s1 / 60) > 0 ? `${Math.floor(row.s1 / 60)}:` : ""}${(row.s1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                            <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s2 == lap ? (parseInt(fastest?.s2 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s2 !== null ? `${Math.floor(row.s2 / 60) > 0 ? `${Math.floor(row.s2 / 60)}:` : ""}${(row.s2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                            <TableCell className={driverData?.filter(d => d.dnumber == row.dnumber)[0]?.fastest.s3 == lap ? (parseInt(fastest?.s3 || "0") == row.dnumber ? "text-purple-500" : "text-green-500") : ""}>{row.s3 !== null ? `${Math.floor(row.s3 / 60) > 0 ? `${Math.floor(row.s3 / 60)}:` : ""}${(row.s3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                            <TableCell className="flex flex-row">
+                              {compounds && compounds[row.compound] && (
+                                <Compound
+                                  abbreviation={compounds[row.compound].abbreviation}
+                                  color={compounds[row.compound].color}
+                                />
+                              )}
+                              <span className="mt-0.5"> - {row.tyreLife} L</span>
+                            </TableCell>
+                            <TableCell>{row.pitTime !== null ? `${Math.floor(row.pitTime / 60) > 0 ? `${Math.floor(row.pitTime / 60)}:` : ""}${(row.pitTime % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                            <TableCell>{row.interval && row.interval !== 0 ? (row.interval > 0 ? `+${(row.interval).toFixed(3)}` : (row.interval).toFixed(3)) : ""}</TableCell>
+                          </TableRow>
+                        ))
+                      }
+                    </TableBody>
+                  </Table>
+                </div>
+
               </div>
-              <div className="bg-navbar shadow-xl rounded-full border h-fit p-2 pb-6 my-auto hidden md:block">
+              <div className="bg-navbar shadow-xl rounded-full border h-fit p-2 pb-6 my-auto hidden md:block scale-80">
                 { weather &&
                   ( weather[lap] ? <Weather airTemp={weather[lap].airTemp} trackTemp={weather[lap].trackTemp}
                                             humidity={weather[lap].humidity} pressure={weather[lap].pressure}
@@ -443,6 +449,10 @@ export default function PastStats({ params }: { params: Promise<{ season: string
 
         )
       }
+    </div>
+  ) : (
+    <div className="w-full h-[calc(100vh-44px)] flex items-center justify-center">
+      <Spinner className="w-16 h-16" />
     </div>
   )
 }

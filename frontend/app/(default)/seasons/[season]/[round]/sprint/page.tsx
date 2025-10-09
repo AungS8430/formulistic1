@@ -3,12 +3,14 @@
 import { useState, useEffect, use } from "react";
 import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
-
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function QualiStats({ params }: { params: Promise<{ season: string, round: string }>}) {
   const { season, round } = use(params)
   const [race, setRace] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, fp1: string | null, fp2: string | null, fp3: string | null, sq: string | null, sprint: string | null, quali: string | null, race: string, state: number }>(null)
-  const [data, setData] = useState<null | { name: string, dnumber: string, team: string, color: string, position: number, q1: number | null, q2: number | null, q3: number | null }[]>(null)
+  const [data, setData] = useState<null | { name: string, dnumber: string, team: string, color: string, position: number, grid: number | null, time: number | null, note: string | null }[]>(null)
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -65,10 +67,10 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
       };
       setRace(temp)
     })
-    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=q`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=s`).then((response) => response.json()).then((content) => {
       content = JSON.parse(content.replaceAll("NaN", "null"))
 
-      let temp: { name: string, dnumber: string, team: string, color: string, position: number, q1: number | null, q2: number | null, q3: number | null}[] = [];
+      let temp: { name: string, dnumber: string, team: string, color: string, position: number, grid: number | null, time: number | null, note: string | null }[] = [];
       for (let i in content.DriverNumber) {
         temp.push({
           name: content.FullName[i],
@@ -76,31 +78,36 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
           team: content.TeamName[i],
           color: content.TeamColor[i],
           position: content.Position[i],
-          q1: content.Q1[i] || null,
-          q2: content.Q2[i] || null,
-          q3: content.Q3[i] || null,
+          grid: content.GridPosition[i],
+          time: content.Time[i] || null,
+          note: content.ClassifiedPosition[i] == "R" ? "DNF" : content.ClassifiedPosition[i] == "D" ? "DSQ" : content.ClassifiedPosition[i] == "W" ? "DNS" : null
         })
       }
       temp.sort((a, b) => {
         return a.position < b.position ? -1 : 1;
       })
-      console.log(content)
       setData((temp))
     })
   }, [season, round]);
 
-  return (
-    <div className="max-w-full lg:max-w-[80%] xl:max-w-[60%] mx-auto p-2 md:p-8 flex flex-col gap-4">
+  return race && data ? (
+    <div className="w-3xl mx-auto p-2 md:p-8 flex flex-col gap-4">
       <div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <h1 className="text-2xl md:text-4xl font-bold">{season} {race?.name}</h1>
-          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md font-bold">Race Weekend</Badge> : <></>}
+          <h1 className="text-2xl md:text-4xl">{season} {race?.name}</h1>
+          { race?.state == 0 ? <Badge className="bg-red-thm text-sm md:text-md">Race Weekend</Badge> : <></>}
           <div className="grow"></div>
         </div>
-        <h3 className="text-md md:text-lg text-neutral-400 my-auto font-semibold">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
+        <h3 className="text-md md:text-lg text-neutral-400 my-auto">{race?.startDate} - {race?.endDate} · {race?.circuit}</h3>
       </div>
       <div>
-        <h2 className="text-lg md:text-xl font-semibold">Qualifying Results</h2>
+        <div className="gap-2 inline-flex">
+          <h2 className="text-lg md:text-xl font-semibold">Sprint Results</h2>
+          <Link href={`/seasons/${season}/${round}/sprint/stats`}>
+            <Button variant="link" className="-m-1 hover:cursor-pointer">View Stats</Button>
+          </Link>
+
+        </div>
         <div className="border border-border rounded-lg overflow-x-auto">
           <Table className="text-sm md:text-md min-w-[600px]">
             <TableHeader>
@@ -108,9 +115,8 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
                 <TableHead>Pos.</TableHead>
                 <TableHead>Driver</TableHead>
                 <TableHead>Constructor</TableHead>
-                <TableHead>Q1</TableHead>
-                <TableHead>Q2</TableHead>
-                <TableHead>Q3</TableHead>
+                <TableHead>Grid</TableHead>
+                <TableHead>Time</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -120,9 +126,8 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
                     <TableCell>{row.position}</TableCell>
                     <TableCell className="font-semibold">{row.dnumber} {row.name}</TableCell>
                     <TableCell style={{ color: `#${row.color}` }}>{row.team}</TableCell>
-                    <TableCell>{row.q1 !== null ? `${Math.floor(row.q1 / 60)}:${(row.q1 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                    <TableCell>{row.q2 !== null ? `${Math.floor(row.q2 / 60)}:${(row.q2 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
-                    <TableCell>{row.q3 !== null ? `${Math.floor(row.q3 / 60)}:${(row.q3 % 60).toFixed(3).padStart(6, "0")}` : ""}</TableCell>
+                    <TableCell>{row.grid}</TableCell>
+                    <TableCell>{row.position == 1 ? "Interval" : row.note ? row.note : row.time !== null ? `+${Math.floor(row.time / 60) > 0 ? Math.floor(row.time / 60) + ":" : ""}${(row.time % 60).toFixed(3)}` : "DNF"}</TableCell>
                   </TableRow>
                 ))
               }
@@ -130,6 +135,10 @@ export default function QualiStats({ params }: { params: Promise<{ season: strin
           </Table>
         </div>
       </div>
+    </div>
+  ) : (
+    <div className="flex h-[calc(100vh-60px)] flex-col items-center justify-center">
+      <Spinner className="w-16 h-16" />
     </div>
   )
 }

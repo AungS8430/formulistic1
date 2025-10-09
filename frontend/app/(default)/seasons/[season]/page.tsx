@@ -4,6 +4,18 @@ import {use, useEffect, useState} from "react";
 import {Badge} from "@/components/ui/badge";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import {redirect, RedirectType} from "next/navigation";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemHeader,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item"
+import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 export default function SeasonPage({ params }: { params: Promise<{ season: string }> }) {
   const { season } = use(params)
@@ -62,46 +74,31 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
               : -1
           });
         });
-
         setRaces(data);
-        console.log(today);
       });
-
   }, [season])
-
-
-
-
-  return (
+  return races ? (
     <div className="max-w-full lg:max-w-[80%] xl:max-w-[60%] mx-auto p-2 md:p-8 flex flex-col gap-2 md:gap-4">
       <div className="flex flex-col sm:flex-row gap-2">
-        <h1 className="text-2xl md:text-3xl font-bold">{season} Season</h1>
+        <h1 className="text-2xl md:text-3xl">{season} Season</h1>
         { season == today.getFullYear().toString() ? <Badge className="bg-red-thm text-md font-bold">Current Season</Badge> : <></>}
       </div>
-      <div className="border border-border rounded-lg overflow-x-auto">
-        <Table className="text-sm md:text-md min-w-[600px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="max-w-24">Round</TableHead>
-              <TableHead className="w-full">Event</TableHead>
-              <TableHead className="max-w-24">Date</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {
-              races?.map((race, index) => (
-                <TableRow key={race.round} onClick={() => redirect(`/seasons/${season}/${race.round}`, RedirectType.push)} className={"hover:cursor-pointer"}>
-                  <TableCell className={race.state == 0 ? "text-red-thm" : (race.state == 1 ? "text-neutral-400" : "")}>{race.round}</TableCell>
-                  <TableCell className={"flex flex-col sm:flex-row gap-2 font-semibold" + (race.state == 0 ? " text-red-thm" : (race.state == 1 ? " text-neutral-400" : ""))}>{race.name} {race.state == 0 ? <Badge className="bg-red-thm">Race Weekend</Badge> : <></>}</TableCell>
-                  <TableCell className={race.state == 0 ? "text-red-thm" : (race.state == 1 ? "text-neutral-400" : "")}>{race.startDate} - {race.endDate}</TableCell>
-                </TableRow>
-              ))
-            }
-          </TableBody>
-
-        </Table>
+      <div className="grid sm:grid-cols-2 gap-2">
+        {
+          races.map((race, index) => (
+            <Item key={race.round} variant={race.state == 1 ? "muted" : "outline"} className="hover:bg-accent/30 hover:cursor-pointer" onClick={() => redirect(`/seasons/${season}/${race.round}`, RedirectType.push)}>
+              <ItemContent>
+                <ItemTitle>{race.name} {race.state == 0 ? <Badge className="bg-red-thm">Race Weekend</Badge> : ""}</ItemTitle>
+                <ItemDescription>{race.circuit}<br />{race.startDate} - {race.endDate}</ItemDescription>
+              </ItemContent>
+            </Item>
+          ))
+        }
       </div>
-
     </div>
-  );
+  ) : (
+    <div className="flex h-[calc(100vh-104px)] w-full items-center justify-center">
+      <Spinner className="w-16 h-16" />
+    </div>
+  )
 }
