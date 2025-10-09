@@ -336,118 +336,118 @@ export default function Live() {
       <div className="p-2 pr-24 w-full">
         <div className="border rounded-lg w-4xl mx-auto">
           <div className="max-h-[calc(100vh-125px)] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pos.</TableHead>
-                <TableHead>Driver</TableHead>
-                <TableHead>Fastest</TableHead>
-                <TableHead>Previous</TableHead>
-                <TableHead>Sector 1</TableHead>
-                <TableHead>Sector 2</TableHead>
-                <TableHead>Sector 3</TableHead>
-                <TableHead>Compound</TableHead>
-                <TableHead>Gap</TableHead>
-                <TableHead>Interval</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {
-                data ? Object.entries(data.drivers).sort((a, b) => {
-                  const posA = parseInt(a[1].position);
-                  const posB = parseInt(b[1].position);
-                  return posA - posB;
-                }).map(([carNum, driver]) => {
-                  const staticInfo = data.driver_list[carNum];
-                  return (
-                    <TableRow key={carNum} className={driver.retired ? "opacity-50" : ""}>
-                      <TableCell>
-                        <div className="flex flex-row items-center gap-1">
-                          {driver.position}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Pos.</TableHead>
+                  <TableHead>Driver</TableHead>
+                  <TableHead>Fastest</TableHead>
+                  <TableHead>Previous</TableHead>
+                  <TableHead>Sector 1</TableHead>
+                  <TableHead>Sector 2</TableHead>
+                  <TableHead>Sector 3</TableHead>
+                  <TableHead>Compound</TableHead>
+                  <TableHead>Gap</TableHead>
+                  <TableHead>Interval</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {
+                  data ? Object.entries(data.drivers).sort((a, b) => {
+                    const posA = parseInt(a[1].position);
+                    const posB = parseInt(b[1].position);
+                    return posA - posB;
+                  }).map(([carNum, driver]) => {
+                    const staticInfo = data.driver_list[carNum];
+                    return (
+                      <TableRow key={carNum} className={driver.retired ? "opacity-50" : ""}>
+                        <TableCell>
+                          <div className="flex flex-row items-center gap-1">
+                            {driver.position}
+                            {
+                              positionChange[carNum] ? (
+                                positionChange[carNum]!.dir === "up" ? (
+                                  <span className="text-green-500">▲</span>
+                                ) : (
+                                  <span className="text-red-500">▼</span>
+                                )
+                              ) : null
+                            }
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-row items-center gap-2 text" style={{ color: `#${staticInfo.TeamColour}` }}>
+                            <div className="w-8 text-right">{carNum}</div>
+                            <div className="font-bold">{staticInfo.FullName.split(" ")[1]}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{driver.best_lap_time && driver.best_lap_time.Lap ? `${driver.best_lap_time.Lap} (${driver.best_lap_time.Value})` : ""}</TableCell>
+                        <TableCell className={driver.last_lap_time && driver.best_lap_time && driver.best_lap_time ? driver.last_lap_time.OverallFastest ? "text-purple-500" : (driver.best_lap_time.Value == driver.last_lap_time.Value ? "text-green-500" : "") : ""}>{driver.last_lap_time ? driver.last_lap_time.Value : ""}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className={driver.sectors["0"]?.overall_fastest ? "text-purple-500" : (driver.sectors["0"]?.personal_fastest ? "text-green-500" : "")}>{driver.sectors["0"]?.value ?? "\b"}</span>
+                            <SectorSegmentsBar segments={driver.sectors["0"]?.segments ?? {}} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className={driver.sectors["1"]?.overall_fastest ? "text-purple-500" : (driver.sectors["1"]?.personal_fastest ? "text-green-500" : "")}>{driver.sectors["1"]?.value ?? "\b"}</span>
+                            <SectorSegmentsBar segments={driver.sectors["1"]?.segments ?? {}} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className={driver.sectors["2"]?.overall_fastest ? "text-purple-500" : (driver.sectors["2"]?.personal_fastest ? "text-green-500" : "")}>{driver.sectors["2"]?.value ?? "\b"}</span>
+                            <SectorSegmentsBar segments={driver.sectors["2"]?.segments ?? {}} />
+                          </div>
+                        </TableCell>
+                        <TableCell className="flex flex-row gap-1 items-center my-auto h-full">
                           {
-                            positionChange[carNum] ? (
-                              positionChange[carNum]!.dir === "up" ? (
-                                <span className="text-green-500">▲</span>
-                              ) : (
-                                <span className="text-red-500">▼</span>
-                              )
-                            ) : null
+                            compounds && driver.current_compound in compounds ? (
+                              <Compound abbreviation={compounds[driver.current_compound].abbreviation} color={compounds[driver.current_compound].color} />
+                            ) : driver.current_compound
                           }
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-row items-center gap-2 text" style={{ color: `#${staticInfo.TeamColour}` }}>
-                          <div className="w-8 text-right">{carNum}</div>
-                          <div className="font-bold">{staticInfo.FullName.split(" ")[1]}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{driver.best_lap_time && driver.best_lap_time.Lap ? `${driver.best_lap_time.Lap} (${driver.best_lap_time.Value})` : ""}</TableCell>
-                      <TableCell className={driver.last_lap_time && driver.best_lap_time && driver.best_lap_time ? driver.last_lap_time.OverallFastest ? "text-purple-500" : (driver.best_lap_time.Value == driver.last_lap_time.Value ? "text-green-500" : "") : ""}>{driver.last_lap_time ? driver.last_lap_time.Value : ""}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <span className={driver.sectors["0"]?.overall_fastest ? "text-purple-500" : (driver.sectors["0"]?.personal_fastest ? "text-green-500" : "")}>{driver.sectors["0"]?.value ?? "\b"}</span>
-                          <SectorSegmentsBar segments={driver.sectors["0"]?.segments ?? {}} />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <span className={driver.sectors["1"]?.overall_fastest ? "text-purple-500" : (driver.sectors["1"]?.personal_fastest ? "text-green-500" : "")}>{driver.sectors["1"]?.value ?? "\b"}</span>
-                          <SectorSegmentsBar segments={driver.sectors["1"]?.segments ?? {}} />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <span className={driver.sectors["2"]?.overall_fastest ? "text-purple-500" : (driver.sectors["2"]?.personal_fastest ? "text-green-500" : "")}>{driver.sectors["2"]?.value ?? "\b"}</span>
-                          <SectorSegmentsBar segments={driver.sectors["2"]?.segments ?? {}} />
-                        </div>
-                      </TableCell>
-                      <TableCell className="flex flex-row gap-1 items-center my-auto h-full">
-                        {
-                          compounds && driver.current_compound in compounds ? (
-                            <Compound abbreviation={compounds[driver.current_compound].abbreviation} color={compounds[driver.current_compound].color} />
-                          ) : driver.current_compound
-                        }
-                        <span className="mt-0.5">- {driver.tire_laps} L</span>
-                      </TableCell>
-                      <TableCell>{driver.gap_to_leader}</TableCell>
-                      <TableCell>{driver.interval_to_ahead ? driver.interval_to_ahead.Value : ""}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          {driver.in_pit ? (
-                            <div className="text-yellow-400 font-bold">
-                              In Pit
-                            </div>
-                          ) : driver.pit_out ? (
-                            <div className="text-green-400 font-bold">
-                              Out Pit
-                            </div>
-                          ) : driver.pit_in_time ? (
-                            <div className="text-red-400 font-bold">
-                              Pit Stop: {formatPitTime(Math.floor((Date.now() - driver.pit_in_time * 1000) / 1000))}
-                            </div>
-                          ) : driver.retired ? (
-                            <div className="text-neutral-400 font-bold">
-                              Retired
-                            </div>
-                          ) : driver.stopped ? (
-                            <div className="text-neutral-400 font-bold">
-                              Stopped
-                            </div>
-                          ) : (
-                            <div className="text-green-400 font-bold">
-                              Racing
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                }) : null
-              }
-            </TableBody>
-          </Table>
-        </div>
+                          <span className="mt-0.5">- {driver.tire_laps} L</span>
+                        </TableCell>
+                        <TableCell>{driver.gap_to_leader}</TableCell>
+                        <TableCell>{driver.interval_to_ahead ? driver.interval_to_ahead.Value : ""}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            {driver.in_pit ? (
+                              <div className="text-yellow-400 font-bold">
+                                In Pit
+                              </div>
+                            ) : driver.pit_out ? (
+                              <div className="text-green-400 font-bold">
+                                Out Pit
+                              </div>
+                            ) : driver.pit_in_time ? (
+                              <div className="text-red-400 font-bold">
+                                Pit Stop: {formatPitTime(Math.floor((Date.now() - driver.pit_in_time * 1000) / 1000))}
+                              </div>
+                            ) : driver.retired ? (
+                              <div className="text-neutral-400 font-bold">
+                                Retired
+                              </div>
+                            ) : driver.stopped ? (
+                              <div className="text-neutral-400 font-bold">
+                                Stopped
+                              </div>
+                            ) : (
+                              <div className="text-green-400 font-bold">
+                                Racing
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }) : null
+                }
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
       </div>

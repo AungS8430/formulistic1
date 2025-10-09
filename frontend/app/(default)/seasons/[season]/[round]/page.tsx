@@ -71,7 +71,7 @@ export default function SeasonPage({ params }: { params: Promise<{ season: strin
 
 
   return race ? (
-    <div className="max-w-full lg:max-w-[80%] xl:max-w-[60%] mx-auto p-2 md:p-8 flex flex-col gap-4">
+    <div className="w-3xl mx-auto p-2 md:p-8 flex flex-col gap-4">
       <div>
         <div className="flex flex-col sm:flex-row md:gap-2">
           <h1 className="text-2xl md:text-4xl">{season} {race?.name}</h1>
