@@ -199,9 +199,9 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
                 driver: Number(driver),
                 time: content["Data"][driver]["LapTime"][lap] ?? null,
                 sectors: {
-                  1: { time: content["Data"][driver]["Sector1Time"] ? content["Data"][driver]["Sector1Time"][lap] ?? null : null, personalBest: null, overallFastest: null },
-                  2: { time: content["Data"][driver]["Sector2Time"] ? content["Data"][driver]["Sector2Time"][lap] ?? null : null, personalBest: null, overallFastest: null },
-                  3: { time: content["Data"][driver]["Sector3Time"] ? content["Data"][driver]["Sector3Time"][lap] ?? null : null, personalBest: null, overallFastest: null },
+                  1: { time: content["Data"][driver]["Sector1Time"] ? content["Data"][driver]["Sector1Time"][lap] ?? null : null, personalBest: content["Data"][driver]["Fastest"]["s1"] == Number(lap), overallFastest: content["Fastest"]["s1"] == driver && content["Data"][driver]["Fastest"]["s1"] == Number(lap) },
+                  2: { time: content["Data"][driver]["Sector2Time"] ? content["Data"][driver]["Sector2Time"][lap] ?? null : null, personalBest: content["Data"][driver]["Fastest"]["s2"] == Number(lap), overallFastest: content["Fastest"]["s2"] == driver && content["Data"][driver]["Fastest"]["s2"] == Number(lap) },
+                  3: { time: content["Data"][driver]["Sector3Time"] ? content["Data"][driver]["Sector3Time"][lap] ?? null : null, personalBest: content["Data"][driver]["Fastest"]["s3"] == Number(lap), overallFastest: content["Fastest"]["s3"] == driver && content["Data"][driver]["Fastest"]["s3"] == Number(lap) },
                 },
                 position: content["Data"][driver]["Position"] ? content["Data"][driver]["Position"][lap] ?? 0 : 0,
                 interval: content["Data"][driver]["GapToLeader"] ? content["Data"][driver]["GapToLeader"][lap] ?? null : null,
@@ -209,7 +209,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
                 compound: content["Data"][driver]["Compound"] ? content["Data"][driver]["Compound"][lap] ?? null : null,
                 tyreLife: content["Data"][driver]["TyreLife"] ? content["Data"][driver]["TyreLife"][lap] ?? null : null,
                 personalBest: content["Data"][driver]["Fastest"]["lap"] == Number(lap),
-                overallFastest: content["Fastest"]["lap"] == Number(lap),
+                overallFastest: content["Fastest"]["lap"] == driver && content["Data"][driver]["Fastest"]["lap"] == Number(lap),
               };
               drivers[Number(driver)].laps.push(lapData);
               if (!lapTimes[Number(lap)]) lapTimes[Number(lap)] = {};
@@ -356,7 +356,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
                   </TableHeader>
                 </Table>
               </div>
-              <div className="overflow-auto max-h-[calc(100dvh-320px)]">
+              <div className="overflow-auto max-h-[calc(100dvh-360px)]">
                 <Table className="text-base w-full h-full">
                   <TableBody>
                     {
@@ -375,12 +375,12 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
                               <span>{row.tyreLife} Laps</span>
                             </div>
                           </TableCell>
-                          <TableCell className={"w-24" + (row.overallFastest && fastests.lap == row.driver ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{
+                          <TableCell className={"w-24" + (row.overallFastest ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{
                             row.time ? `${Math.floor(row.time / 60)}:${(row.time % 60).toFixed(3).padStart(6, "0")}` : ""
                           }</TableCell>
-                          <TableCell className={"w-20" + (row.sectors[1].overallFastest && fastests.s1 == row.driver ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{row.sectors[1].time?.toFixed(3) ?? ""}</TableCell>
-                          <TableCell className={"w-20" + (row.sectors[2].overallFastest && fastests.s2 == row.driver ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{row.sectors[2].time?.toFixed(3) ?? ""}</TableCell>
-                          <TableCell className={"w-20" + (row.sectors[3].overallFastest && fastests.s3 == row.driver ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{row.sectors[3].time?.toFixed(3) ?? ""}</TableCell>
+                          <TableCell className={"w-20" + (row.sectors[1].overallFastest ? " text-purple-400" : row.sectors[1].personalBest ? " text-green-400" : "")}>{row.sectors[1].time?.toFixed(3) ?? ""}</TableCell>
+                          <TableCell className={"w-20" + (row.sectors[2].overallFastest ? " text-purple-400" : row.sectors[2].personalBest ? " text-green-400" : "")}>{row.sectors[2].time?.toFixed(3) ?? ""}</TableCell>
+                          <TableCell className={"w-20" + (row.sectors[3].overallFastest ? " text-purple-400" : row.sectors[3].personalBest ? " text-green-400" : "")}>{row.sectors[3].time?.toFixed(3) ?? ""}</TableCell>
                           <TableCell className="w-20">{
                             row.interval ? `+${row.interval?.toFixed(3)}` : row.interval == 0 ? "Leader" : ""
                           }</TableCell>
@@ -455,13 +455,13 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
                             </div>
 
                           </TableCell>
-                          <TableCell className={"w-[12.5%]" + (row.overallFastest && fastests.lap == row.driver ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{
+                          <TableCell className={"w-[12.5%]" + (row.overallFastest ? " text-purple-400" : row.personalBest ? " text-green-400" : "")}>{
                             row.time ? `${Math.floor(row.time / 60)}:${(row.time % 60).toFixed(3).padStart(6, "0")}` : ""
                             // 'time' in row && row.interval !== null ? row.position == 1 ? `${Math.floor(row.interval / 60) > 0 ? `${Math.floor(row.time / 60)}:` : ""}${(row.interval % 60).toFixed(3).padStart(6, "0")}` : `+${Math.floor(row.interval / 60) > 0 ? `${Math.floor(row.interval / 60)}:` : ""}${(row.interval % 60).toFixed(3).padStart(6, "0")}` : ""
                           }</TableCell>
-                          <TableCell className={"w-[12.5%]" + (row.sectors[1].overallFastest && fastests.s1 == row.driver ? "text-purple-400" : row.personalBest ? "text-green-400" : "")}>{row.sectors[1].time?.toFixed(3) ?? ""}</TableCell>
-                          <TableCell className={"w-[12.5%]" + (row.sectors[2].overallFastest && fastests.s2 == row.driver ? "text-purple-400" : row.personalBest ? "text-green-400" : "")}>{row.sectors[2].time?.toFixed(3) ?? ""}</TableCell>
-                          <TableCell className={"w-[12.5%]" + (row.sectors[3].overallFastest && fastests.s3 == row.driver ? "text-purple-400" : row.personalBest ? "text-green-400" : "")}>{row.sectors[3].time?.toFixed(3) ?? ""}</TableCell>
+                          <TableCell className={"w-[12.5%]" + (row.sectors[1].overallFastest ? " text-purple-400" : row.sectors[1].personalBest ? " text-green-400" : "")}>{row.sectors[1].time?.toFixed(3) ?? ""}</TableCell>
+                          <TableCell className={"w-[12.5%]" + (row.sectors[2].overallFastest ? " text-purple-400" : row.sectors[2].personalBest ? " text-green-400" : "")}>{row.sectors[2].time?.toFixed(3) ?? ""}</TableCell>
+                          <TableCell className={"w-[12.5%]" + (row.sectors[3].overallFastest ? " text-purple-400" : row.sectors[3].personalBest ? " text-green-400" : "")}>{row.sectors[3].time?.toFixed(3) ?? ""}</TableCell>
                           <TableCell className="w-[12.5%]">{
                             row.interval ? `+${row.interval?.toFixed(3)}` : row.interval == 0 ? "Leader" : ""
                             // 'time' in row && row.interval !== null ? row.position == 1 ? `${Math.floor(row.interval / 60) > 0 ? `${Math.floor(row.time / 60)}:` : ""}${(row.interval % 60).toFixed(3).padStart(6, "0")}` : `+${Math.floor(row.interval / 60) > 0 ? `${Math.floor(row.interval / 60)}:` : ""}${(row.interval % 60).toFixed(3).padStart(6, "0")}` : ""
