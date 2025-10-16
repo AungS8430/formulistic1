@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Space Grotesk", "Space Grotesk Fallback";
+  --font-mono: "Space Mono", "Space Mono Fallback";
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -90,8 +90,8 @@
   --popover: oklch(0.25 0.018 284.666);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.25 0.018 284.666);
-  --secondary: oklch(0.3 0.018 284.666);
+  --primary-foreground: oklch(0.258 0.026 284.422);
+  --secondary: oklch(0.297 0.031 284.375);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.3 0.018 284.666);
   --muted-foreground: oklch(0.7 0.018 284.666);

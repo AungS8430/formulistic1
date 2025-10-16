@@ -4,7 +4,7 @@ from util.Livetiming import (
     get_session_info, get_track_status,
     get_race_control_messages, get_compounds
 )
-from util.FetchSeason import get_schedule, get_race
+from util.FetchSeason import get_schedule, get_race, get_standings
 from fastapi import FastAPI, Query
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,7 +50,6 @@ app = FastAPI(lifespan=lifespan)
 
 origins = [
     "https://formulistic1.aungs.eu.org",
-    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -88,3 +87,7 @@ async def session_info(year: int=2025, gp: int=1, session: str="r"):
 @app.get("/season/schedule")
 async def season_schedule(year: int=2025):
     return get_schedule(year)
+
+@app.get("/season/standings")
+async def season_standings(year: int=2025):
+    return get_standings(year)

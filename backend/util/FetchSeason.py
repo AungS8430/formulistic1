@@ -11,3 +11,6 @@ def get_race(season: int, gp: int):
         return {}
     print(data)
     return data[0]
+
+def get_standings(season: int):
+    return { "drivers": ergast.get_driver_standings(season), "constructors": ergast.get_constructor_standings(season) }

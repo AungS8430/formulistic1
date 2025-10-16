@@ -16,7 +16,7 @@ function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle
   ].join(" ");
 }
 
-export default function Comound({ abbreviation, color }: { abbreviation: string; color: string }) {
+export default function Compound({ abbreviation, color }: { abbreviation: string; color: string }) {
   // Arc parameters
   const cx = 128, cy = 128, r = 100;
   // Left arc: from 210deg to 330deg

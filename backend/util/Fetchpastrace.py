@@ -11,7 +11,7 @@ laptime_var_selections = ["DriverNumber", "LapNumber", "Compound", "TyreLife", "
 laptime_time_selections = ["Time", "LapTime", "Sector1Time", "Sector2Time", "Sector3Time", "PitInTime","PitOutTime"]
 
 
-result_var_selection = ["DriverNumber", "BroadcastName", "Abbreviation", "TeamName", "TeamColor", "FullName", "ClassifiedPosition", "Position", "GridPosition"]
+result_var_selection = ["DriverNumber", "BroadcastName", "Abbreviation", "TeamName", "TeamColor", "FullName", "ClassifiedPosition", "Position", "GridPosition", "Points"]
 result_time_selection = ["Time" , "Q1", "Q2", "Q3"]
 
 
@@ -72,7 +72,10 @@ def results_process(results: pd.DataFrame):
     return out
 
 def weather_process(data: fastf1.core.Session): # pyright: ignore
-    weather_data = data.laps.pick_drivers(data.results.loc[data.results["Position"] == 1, "Abbreviation"]).get_weather_data()
+    try:
+        weather_data = data.laps.pick_drivers(data.results.loc[data.results["Position"] == 1, "Abbreviation"]).get_weather_data()
+    except Exception:
+        return {}
     weather_out = weather_data[weather_var_selections]
     time_copy = weather_data[weather_time_selection]
     tem = []
