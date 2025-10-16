@@ -310,7 +310,7 @@ export default function Live() {
         <div className="px-4 flex flex-row">
           <div className="flex flex-col">
             <h1 className="text-2xl font-semibold">{data?.session.session_info.Meeting.Name} <span className="text-lg text-neutral-300">• {data?.session.session_name}</span></h1>
-            <h2 className="text-md text-neutral-300">{data?.session.session_info.Meeting.Circuit?.ShortName} • {data?.session.session_info.Meeting.Location}</h2>
+            <h2 className="text-base text-neutral-300">{data?.session.session_info.Meeting.Circuit?.ShortName} • {data?.session.session_info.Meeting.Location}</h2>
           </div>
           <div className="flex-grow-1" />
           <div className="flex pr-4">
