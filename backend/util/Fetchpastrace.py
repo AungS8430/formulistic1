@@ -53,9 +53,21 @@ def laptime_process(laps: pd.DataFrame, drivers: list[str], total_lap: int, is_r
         fastest_lap_idx = min(out[driver]["LapTime"], key=out[driver]["LapTime"].get) if "LapTime" in out[driver] and out[driver]["LapTime"] else None
         out[driver]["Fastest"] = {
             "lap": int(fastest_lap_idx) if fastest_lap_idx is not None else None,
-            "s1": min(out[driver]["Sector1Time"], key=out[driver]["Sector1Time"].get) if "Sector1Time" in out[driver] and out[driver]["Sector1Time"] else None,
-            "s2": min(out[driver]["Sector2Time"], key=out[driver]["Sector2Time"].get) if "Sector2Time" in out[driver] and out[driver]["Sector2Time"] else None,
-            "s3": min(out[driver]["Sector3Time"], key=out[driver]["Sector3Time"].get) if "Sector3Time" in out[driver] and out[driver]["Sector3Time"] else None
+            "s1": min(
+                (k for k, v in out[driver].get("Sector1Time", {}).items() if pd.notna(v)),
+                key=lambda k: out[driver]["Sector1Time"][k],
+                default=None
+            ),
+            "s2": min(
+                (k for k, v in out[driver].get("Sector2Time", {}).items() if pd.notna(v)),
+                key=lambda k: out[driver]["Sector2Time"][k],
+                default=None
+            ),
+            "s3": min(
+                (k for k, v in out[driver].get("Sector3Time", {}).items() if pd.notna(v)),
+                key=lambda k: out[driver]["Sector3Time"][k],
+                default=None
+            )
         }
     return out
 
@@ -110,7 +122,11 @@ def get_session_data(year: int ,gp: int, session_type: str):
             if idx is None:
                 return float("inf")
             return out["laptime"]["Data"][driver]["LapTime" if key == "lap" else f"Sector{key[1]}Time"].get(idx, float("inf"))
-        fastest_driver = min(drivers, key=get_time, default=None)
+        fastest_driver = min(
+            (d for d in drivers if isinstance(get_time(d), (int, float)) and not pd.isna(get_time(d)) and get_time(d) not in (0, None) and not isinstance(get_time(d), bool)),
+            key=get_time,
+            default=None
+        )
         fastest[key] = fastest_driver
     out["laptime"]["Fastest"] = fastest
 
