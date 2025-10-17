@@ -20,7 +20,6 @@ interface Race {
   startDate: string,
   endDate: string,
   range: string,
-  state: number
 }
 
 interface DriverStanding {
@@ -74,17 +73,9 @@ export default async function SeasonPage({params}: { params: { season: string } 
       round: row.round,
       name: row.raceName,
       circuit: row.Circuit?.circuitName ?? "",
-      startDate: startDateTime ? formatDateLocal(startDateTime) : "",
-      endDate: endDateTime ? formatDateLocal(endDateTime) : "",
+      startDate: startDateTime ? startDateTime.toISOString() : "",
+      endDate: endDateTime ? endDateTime.toISOString() : "",
       range: startDateTime && endDateTime ? formatDateRangeLocal(startDateTime, endDateTime) : "",
-      state:
-        startDateTime && endDateTime
-          ? startDateTime <= today && today <= endDateTime
-            ? 0
-            : today < startDateTime
-              ? 1
-              : -1
-          : -1,
     });
   });
 

@@ -108,7 +108,7 @@ export default function Navbar() {
             {
               currentRace ? (
                 <NavigationMenuItem>
-                  <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`} className="hover:bg-inherit! hover:cursor-default">
+                  <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`} className="hover:bg-inherit! hover:cursor-default p-0">
                     <Button className="bg-red-thm hover:bg-red-atv cursor-pointer">{currentRace.name}</Button>
                   </NavigationMenuLink>
 
