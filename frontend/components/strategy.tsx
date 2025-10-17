@@ -36,9 +36,7 @@ export default function StrategyChart({ strategy, compounds }: { strategy: Strat
   // ensure enough vertical space so all driver labels render
   const chartHeight = Math.max(200, data.length * 36)
 
-  const chartConfig: ChartConfig = {
-    type: "bar",
-  }
+  const chartConfig: ChartConfig = {}
 
   return (
     <ChartContainer config={chartConfig}>

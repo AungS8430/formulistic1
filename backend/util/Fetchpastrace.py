@@ -115,6 +115,59 @@ def strategy_process(data: fastf1.core.Session): # pyright: ignore
         out[driver_abbr] = driver_stints.to_dict(orient="records")
     return out
 
+def pace_process(data: fastf1.core.Session): # pyright: ignore
+    laps = data.laps.pick_quicklaps()
+    transformed_laps = laps.copy()
+    transformed_laps.loc[:, "LapTime (s)"] = laps["LapTime"].dt.total_seconds()
+
+    # order the team from the fastest (lowest median lap time) tp slower
+    team_order = (
+        transformed_laps[["Team", "LapTime (s)"]]
+        .groupby("Team")
+        .median()["LapTime (s)"]
+        .sort_values()
+        .index
+    )
+    print(team_order)
+
+    # make a color palette associating team names to hex codes
+    team_palette = {team: fastf1.plotting.get_team_color(team, session=data) for team in team_order}
+
+    boxplot_stats = []
+    for team in team_order:
+        times = transformed_laps.loc[transformed_laps["Team"] == team, "LapTime (s)"].dropna()
+        if len(times) == 0:
+            continue
+
+        q1 = times.quantile(0.25)
+        median = times.median()
+        q3 = times.quantile(0.75)
+        iqr = q3 - q1
+        lower_whisker = times[times >= q1 - 1.5 * iqr].min()
+        upper_whisker = times[times <= q3 + 1.5 * iqr].max()
+        min_time = times.min()
+        max_time = times.max()
+
+        boxplot_stats.append({
+            "team": team,
+            "min": float(min_time),
+            "q1": float(q1),
+            "median": float(median),
+            "q3": float(q3),
+            "max": float(max_time),
+            "lower_whisker": float(lower_whisker),
+            "upper_whisker": float(upper_whisker),
+            "color": team_palette[team]
+        })
+
+    out = {
+        "team_order": list(team_order),
+        "team_palette": team_palette,
+        "boxplot_stats": boxplot_stats
+    }
+
+    return out
+
 def get_session_data(year: int ,gp: int, session_type: str):
     session = get_session(year, gp, session_type)
     try:
@@ -149,6 +202,7 @@ def get_session_data(year: int ,gp: int, session_type: str):
     compound_colors = get_compound_mapping(session)
     out["laptime"]["Compounds"] = {}
     out["laptime"]["Strategy"] = strategy_process(session)
+    out["laptime"]["Pace"] = pace_process(session)
     compound_abv = {
         "SOFT": "S",
         "MEDIUM": "M",

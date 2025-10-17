@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Compound from "@/components/compound";
 import StrategyChart from "@/components/strategy";
+import PaceChart from "@/components/paceChart";
 import Link from "next/link";
 
 interface RaceResults {
@@ -97,6 +98,18 @@ interface Strategy {
   [driver: string]: Stint[]
 }
 
+interface Pace {
+  team: string,
+  min: number,
+  q1: number,
+  median: number,
+  q3: number,
+  max: number,
+  lower_whisker: number,
+  upper_whisker: number,
+  color: string,
+}
+
 const sessionNames = {
   "fp1": "Free Practice 1",
   "fp2": "Free Practice 2",
@@ -122,6 +135,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
   const [compounds, setCompounds] = useState<CompoundInfo>({});
   const [fastests, setFastests] = useState<{ lap: number, s1: number, s2: number, s3: number }>({ lap: 0, s1: 0, s2: 0, s3: 0 });
   const [strategy, setStrategy] = useState<Strategy>({});
+  const [pace, setPace] = useState<Pace[]>([]);
   const [currentLap, setCurrentLap] = useState<number>(1);
   const [currentDriver, setCurrentDriver] = useState<number | null>(null);
 
@@ -238,10 +252,12 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
               length: stint["StintLength"],
             }));
           });
+          let pace: Pace[] = content["Pace"] ? content["Pace"]["boxplot_stats"] : [];
           console.log(lapTimes);
           console.log(drivers);
-          console.log(strategy)
-          return { lapTimes, drivers, compounds, fastests, strategy };
+          console.log(strategy);
+          console.log(pace);
+          return { lapTimes, drivers, compounds, fastests, strategy, pace };
         })
     }
 
@@ -257,6 +273,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
           setCompounds(stats.compounds);
           setFastests(stats.fastests);
           setStrategy(stats.strategy);
+          setPace(stats.pace)
           setCurrentDriver(stats.drivers ? Number(Object.keys(stats.drivers)[0]) : null);
         }
       } catch (e) {
@@ -285,6 +302,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
           <TabsTrigger value="lap-by-lap">Lap-by-Lap</TabsTrigger>
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
           <TabsTrigger value="strats">Strategy</TabsTrigger>
+          <TabsTrigger value="pace">Team Pace</TabsTrigger>
         </TabsList>
       </div>
 
@@ -501,8 +519,11 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
           )
         }
       </TabsContent>
-      <TabsContent value="strats" className="min-h-[calc(100dvh-260px)] p-4 overflow-auto border rounded-lg">
+      <TabsContent value="strats" className="min-h-[calc(100dvh-260px)] p-4 overflow-auto flex flex-col border rounded-lg">
         <StrategyChart strategy={strategy} compounds={compounds} />
+      </TabsContent>
+      <TabsContent value="pace" className="min-h-[calc(100dvh-260px)] p-4 pt-8 overflow-auto flex flex-col border rounded-lg">
+        <PaceChart paceData={pace} />
       </TabsContent>
     </Tabs>
   ) : (
