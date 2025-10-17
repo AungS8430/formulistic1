@@ -75,6 +75,9 @@ export default function Navbar() {
         <NavigationMenu viewport={false}>
           <NavigationMenuList>
             <NavigationMenuItem>
+              <NavigationMenuLink href="/live">Live</NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <NavigationMenuTrigger>This Season</NavigationMenuTrigger>
               <NavigationMenuContent>
                 <div className="w-60 relative max-h-64 overflow-y-auto">
