@@ -99,6 +99,22 @@ def weather_process(data: fastf1.core.Session): # pyright: ignore
     out = out.to_dict()
     return out
 
+def strategy_process(data: fastf1.core.Session): # pyright: ignore
+    laps = data.laps
+    drivers = data.drivers
+    drivers = [data.get_driver(driver)["Abbreviation"] for driver in drivers]
+    stints = laps[["Driver", "Stint", "Compound", "LapNumber"]]
+    stints = stints.groupby(["Driver", "Stint", "Compound"])
+    stints = stints.count().reset_index()
+    stints = stints.rename(columns={"LapNumber": "StintLength"})
+    out = {}
+    for driver in drivers:
+        driver_abbr = data.get_driver(driver)["Abbreviation"]
+        driver_stints = stints[stints["Driver"] == driver]
+        driver_stints = driver_stints.drop(columns=["Driver"])
+        out[driver_abbr] = driver_stints.to_dict(orient="records")
+    return out
+
 def get_session_data(year: int ,gp: int, session_type: str):
     session = get_session(year, gp, session_type)
     try:
@@ -132,6 +148,7 @@ def get_session_data(year: int ,gp: int, session_type: str):
 
     compound_colors = get_compound_mapping(session)
     out["laptime"]["Compounds"] = {}
+    out["laptime"]["Strategy"] = strategy_process(session)
     compound_abv = {
         "SOFT": "S",
         "MEDIUM": "M",

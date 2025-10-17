@@ -66,7 +66,7 @@ app = FastAPI(lifespan=lifespan)
 
 origins = [
     "https://formulistic1.aungs.eu.org",
-    "https://formulistic1-git-development-aungs8430s-projects.vercel.app"
+    "https://formulistic1-git-development-aungs8430s-projects.vercel.app",
 ]
 
 app.add_middleware(

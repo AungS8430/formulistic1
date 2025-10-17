@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Compound from "@/components/compound";
+import StrategyChart from "@/components/strategy";
 import Link from "next/link";
 
 interface RaceResults {
@@ -86,6 +87,16 @@ interface CompoundInfo {
   }
 }
 
+interface Stint {
+  stint: number,
+  compound: string,
+  length: number,
+}
+
+interface Strategy {
+  [driver: string]: Stint[]
+}
+
 const sessionNames = {
   "fp1": "Free Practice 1",
   "fp2": "Free Practice 2",
@@ -110,6 +121,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
   const [drivers, setDrivers] = useState<DriverData>({});
   const [compounds, setCompounds] = useState<CompoundInfo>({});
   const [fastests, setFastests] = useState<{ lap: number, s1: number, s2: number, s3: number }>({ lap: 0, s1: 0, s2: 0, s3: 0 });
+  const [strategy, setStrategy] = useState<Strategy>({});
   const [currentLap, setCurrentLap] = useState<number>(1);
   const [currentDriver, setCurrentDriver] = useState<number | null>(null);
 
@@ -218,9 +230,18 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
           }
           let compounds: CompoundInfo = content["Compounds"] ? content["Compounds"] : {};
           let fastests = content["Fastest"] ? content["Fastest"] : { lap: 0, s1: 0, s2: 0, s3: 0 };
+          let strategy: Strategy = {};
+          Object.keys(content["Strategy"])?.forEach((driver) => {
+            strategy[driver] = content["Strategy"][driver].map((stint: any) => ({
+              stint: stint["Stint"],
+              compound: stint["Compound"],
+              length: stint["StintLength"],
+            }));
+          });
           console.log(lapTimes);
-          console.log(drivers)
-          return { lapTimes, drivers, compounds, fastests };
+          console.log(drivers);
+          console.log(strategy)
+          return { lapTimes, drivers, compounds, fastests, strategy };
         })
     }
 
@@ -235,6 +256,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
           setDrivers(stats.drivers);
           setCompounds(stats.compounds);
           setFastests(stats.fastests);
+          setStrategy(stats.strategy);
           setCurrentDriver(stats.drivers ? Number(Object.keys(stats.drivers)[0]) : null);
         }
       } catch (e) {
@@ -262,6 +284,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
         <TabsList>
           <TabsTrigger value="lap-by-lap">Lap-by-Lap</TabsTrigger>
           <TabsTrigger value="drivers">Drivers</TabsTrigger>
+          <TabsTrigger value="strats">Strategy</TabsTrigger>
         </TabsList>
       </div>
 
@@ -478,7 +501,9 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
           )
         }
       </TabsContent>
-
+      <TabsContent value="strats" className="min-h-[calc(100dvh-260px)] p-4 overflow-auto border rounded-lg">
+        <StrategyChart strategy={strategy} compounds={compounds} />
+      </TabsContent>
     </Tabs>
   ) : (
     <div>
