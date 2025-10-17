@@ -1,10 +1,7 @@
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table"
 import {redirect, RedirectType} from "next/navigation";
-import {Spinner} from "@/components/ui/spinner";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
 import Link from "next/link";
-import {EventDetails} from "@/components/eventDetails";
+import {RaceDetailsClient} from "@/components/RaceDetailsClient";
+import {SessionHeader} from "@/components/SessionHeader";
 
 interface Race {
   round: number,
@@ -73,8 +70,8 @@ export default async function SeasonPage({params}: { params: Promise<{ season: s
       round: parseInt(content.round ?? content.Round ?? content.roundNumber ?? "0"),
       name: content.raceName ?? content.name ?? "",
       circuit: content.Circuit?.circuitName ?? "",
-      startDate: getDateTimeString(content.FirstPractice?.date) || getDateTimeString(content.date)!,
-      endDate: getDateTimeString(content.date)!,
+      startDate: getDateTimeString(content.FirstPractice?.date, content.FirstPractice?.time) || getDateTimeString(content.date, content.time)!,
+      endDate: getDateTimeString(content.date, content.time)!,
       range: "", // This will be calculated on the client
       fp1: getDateTimeString(content.FirstPractice?.date, content.FirstPractice?.time),
       fp2: getDateTimeString(content.SecondPractice?.date, content.SecondPractice?.time),
@@ -226,8 +223,9 @@ export default async function SeasonPage({params}: { params: Promise<{ season: s
   }
 
   return race ? (
-    <div className="flex flex-col gap-4 md:gap-8 p-2 md:p-8">
-      <EventDetails race={race} season={season}/>
+    <div className="xl:w-7xl mx-auto p-2 md:px-8 flex flex-col gap-8">
+      <SessionHeader race={Object.assign(race, {season: season})}/>
+      <RaceDetailsClient initialRace={race} season={season} round={round}/>
     </div>
   ) : (
     <div className="flex h-[calc(100vh-104px)] flex-col items-center justify-center text-center px-4">
