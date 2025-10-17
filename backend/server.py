@@ -13,20 +13,36 @@ from contextlib import asynccontextmanager
 import asyncio
 import os
 import threading
+import time
 
-FILE_PATH = "fake_saved_data.txt"  # Set this to your real file
+FILE_PATH = "saved_data.txt"  # Set this to your real file
 
-# def livetiming_recorder_loop():
-#     client = SignalRClient(FILE_PATH, filemode='a')
-#     while True:
-#         try:
-#             client.start()
-#             while client.is_running:
-#                 pass  # Busy wait, fast reconnect
-#         except Exception as e:
-#             print(f"Recorder error: {e}")
-#         finally:
-#             client.stop()
+def livetiming_recorder_loop():
+    """Run the SignalR client in a reconnecting loop and avoid busy-waiting.
+
+    The client is created inside the loop so it can be recreated after errors.
+    We poll a small sleep while the client is running to avoid 100% CPU.
+    After any failure, we ensure the client is stopped and wait a short backoff
+    before attempting to reconnect.
+    """
+    while True:
+        client = None
+        try:
+            client = SignalRClient(FILE_PATH, filemode='a')
+            client.start()
+            # Poll the running flag with a small sleep to avoid busy-wait CPU usage
+            while getattr(client, "is_running", False):
+                time.sleep(0.1)
+        except Exception as e:
+            print(f"Recorder error: {e}")
+        finally:
+            try:
+                if client is not None:
+                    client.stop()
+            except Exception:
+                pass
+        # Small backoff before reconnecting
+        time.sleep(1)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,7 +57,7 @@ async def lifespan(app: FastAPI):
             except Exception:
                 await asyncio.sleep(0.001)
     # Start the FastF1 recorder in a background thread
-    # threading.Thread(target=livetiming_recorder_loop, daemon=True).start()
+    threading.Thread(target=livetiming_recorder_loop, daemon=True).start()
     # Start your file reader as before
     asyncio.create_task(background_file_reader(FILE_PATH))
     yield
@@ -50,6 +66,7 @@ app = FastAPI(lifespan=lifespan)
 
 origins = [
     "https://formulistic1.aungs.eu.org",
+    "https://formulistic1-git-development-aungs8430s-projects.vercel.app",
 ]
 
 app.add_middleware(

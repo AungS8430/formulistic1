@@ -28,27 +28,36 @@ export default function Navbar() {
 
   const [races, setRaces] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[]>(null)
   const [currentRace, setCurrentRace] = useState<null | { round: number, name: string }>(null)
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/season/schedule?year=${currentSeason}`).then((response) => response.json()).then((content) => {
+      const now = new Date();
+      const getDateTime = (session: { date: string, time?: string } | undefined, fallbackDate: string, fallbackTime?: string) => {
+        const dateStr = session?.date || fallbackDate;
+        const timeStr = session?.time || fallbackTime;
+        const datePart = dateStr.split("T")[0];
+        return new Date(`${datePart}T${timeStr || '00:00:00Z'}`);
+      };
+
       let data: { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[] = [];
       content.map((row: any) => {
-        const s = new Date(row.FirstPractice ? row.FirstPractice.date : row.date);
-        const e = new Date(row.date);
+        const s = getDateTime(row.FirstPractice, row.date, row.time);
+        const e = getDateTime({ date: row.date, time: row.time }, row.date, row.time);
+        const state = s <= now && now <= e ? 0 : now < s ? 1 : -1;
+
         data.push({
           round: row.round,
           name: row.raceName,
           circuit: row.Circuit.circuitName,
-          startDate: row.FirstPractice ? row.FirstPractice.date : row.date,
-          endDate: row.date,
-          state: (s <= today && today <= e ? 0 : (today < s ? 1 : -1))
+          startDate: s.toISOString(),
+          endDate: e.toISOString(),
+          state: state
         })
-        if (s <= today && today <= e) setCurrentRace({ round: row.round, name: row.raceName });
+        if (state === 0) {
+          setCurrentRace({ round: row.round, name: row.raceName });
+        }
       })
       setRaces(data)
-      console.log(today)
     })
 
   }, [currentSeason])
@@ -108,7 +117,7 @@ export default function Navbar() {
             {
               currentRace ? (
                 <NavigationMenuItem>
-                  <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`} className="hover:bg-inherit! hover:cursor-default">
+                  <NavigationMenuLink href={`/seasons/${currentSeason}/${currentRace.round}`} className="hover:bg-inherit! hover:cursor-default p-0">
                     <Button className="bg-red-thm hover:bg-red-atv cursor-pointer">{currentRace.name}</Button>
                   </NavigationMenuLink>
 
