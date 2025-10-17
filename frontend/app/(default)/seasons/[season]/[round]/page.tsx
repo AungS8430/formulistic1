@@ -92,16 +92,15 @@ export default async function SeasonPage({params}: { params: Promise<{ season: s
       long: content.Circuit?.Location?.long ?? null,
     };
 
-    const shouldFetchResults = () => {
-      const start = new Date(temp.startDate);
+    const shouldFetchResults = (start: Date = new Date(temp.startDate), time: number = 1) => {
       const today = new Date();
-      return start <= today;
+      return new Date(start.setHours(start.getHours() + time)) <= today;
     }
 
     if (shouldFetchResults()) {
       const fetches: Promise<void>[] = [];
 
-      if (temp.sq) {
+      if (temp.sq && shouldFetchResults(new Date(temp.sq), 1)) {
         fetches.push(
           fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=${Number(season) == 2023 ? "ss" : "sq"}`)
             .then((response) => response.json())
@@ -125,7 +124,7 @@ export default async function SeasonPage({params}: { params: Promise<{ season: s
             })
         );
       }
-      if (temp.sprint) {
+      if (temp.sprint && shouldFetchResults(new Date(temp.sprint), 1)) {
         fetches.push(
           fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=s`)
             .then((response) => response.json())
@@ -156,7 +155,7 @@ export default async function SeasonPage({params}: { params: Promise<{ season: s
             })
         );
       }
-      if (temp.quali) {
+      if (temp.quali && shouldFetchResults(new Date(temp.quali), 1)) {
         fetches.push(
           fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=q`)
             .then((response) => response.json())
@@ -180,36 +179,37 @@ export default async function SeasonPage({params}: { params: Promise<{ season: s
             })
         );
       }
-      fetches.push(
-        fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=r`)
-          .then((response) => response.json())
-          .then((content) => {
-            content = JSON.parse(content.replaceAll("NaN", "null"));
-            let res: RaceResults[] = [];
-            for (let i in content.DriverNumber) {
-              res.push({
-                name: content.FullName[i],
-                dnumber: i,
-                team: content.TeamName[i],
-                color: content.TeamColor[i],
-                position: content.Position[i],
-                grid: content.GridPosition[i],
-                time: content.Time[i] || null,
-                note:
-                  content.ClassifiedPosition[i] == "R"
-                    ? "DNF"
-                    : content.ClassifiedPosition[i] == "D"
-                      ? "DSQ"
-                      : content.ClassifiedPosition[i] == "W"
-                        ? "DNS"
-                        : null,
-              });
-            }
-            res.sort((a, b) => (a.position < b.position ? -1 : 1));
-            if (temp.results) temp.results.race = res;
-          })
-      );
-
+      if (shouldFetchResults(new Date(temp.endDate), 2)) {
+        fetches.push(
+          fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/session/results?year=${season}&gp=${round}&session=r`)
+            .then((response) => response.json())
+            .then((content) => {
+              content = JSON.parse(content.replaceAll("NaN", "null"));
+              let res: RaceResults[] = [];
+              for (let i in content.DriverNumber) {
+                res.push({
+                  name: content.FullName[i],
+                  dnumber: i,
+                  team: content.TeamName[i],
+                  color: content.TeamColor[i],
+                  position: content.Position[i],
+                  grid: content.GridPosition[i],
+                  time: content.Time[i] || null,
+                  note:
+                    content.ClassifiedPosition[i] == "R"
+                      ? "DNF"
+                      : content.ClassifiedPosition[i] == "D"
+                        ? "DSQ"
+                        : content.ClassifiedPosition[i] == "W"
+                          ? "DNS"
+                          : null,
+                });
+              }
+              res.sort((a, b) => (a.position < b.position ? -1 : 1));
+              if (temp.results) temp.results.race = res;
+            })
+        );
+      }
       await Promise.all(fetches);
     }
     race = temp;
