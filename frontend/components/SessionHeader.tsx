@@ -10,7 +10,6 @@ export function SessionHeader({ race }: { race: any }) {
 
   useEffect(() => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const start = new Date(race.startDate);
     const end = new Date(race.endDate);
 
