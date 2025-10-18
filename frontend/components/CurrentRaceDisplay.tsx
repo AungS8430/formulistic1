@@ -40,16 +40,16 @@ export function CurrentRaceDisplay({ races, currentSeason }: { races: any[], cur
   return (
     <div className="flex flex-col w-full gap-4">
       <h2 className="text-3xl font-bold">Current Race</h2>
-      <Link className="bg-primary-foreground hover:bg-secondary px-10 py-6 rounded-lg flex flex-row w-full"
+      <Link className="bg-primary-foreground hover:bg-secondary py-4 px-2 md:px-10 md:py-6 rounded-lg flex flex-col md:flex-row w-full gap-2 md:gap-0"
             href={`/seasons/${currentSeason}/${currentRace.round}`}>
-        <div className="flex flex-col justify-center">
-          <h2 className="text-2xl font-bold">{currentRace.name}</h2>
-          <h3 className="text-xl font-semibold text-gray-300">{currentRace.circuit}</h3>
+        <div className="flex flex-col text-center md:text-left justify-center">
+          <h2 className="text-xl md:text-2xl font-bold">{currentRace.name}</h2>
+          <h3 className="textlg md:text-xl font-semibold text-gray-300">{currentRace.circuit}</h3>
         </div>
         <div className="grow"/>
-        <div className="flex flex-col text-right justify-center">
-          <h3 className="text-lg font-semibold text-gray-300">Round {currentRace.round} of 22</h3>
-          <h3 className="text-lg font-semibold text-gray-300">{currentRace.duration}</h3>
+        <div className="flex flex-col text-center md:text-right justify-center">
+          <h3 className="text-md md:text-lg font-semibold text-gray-300">Round {currentRace.round} of 22</h3>
+          <h3 className="text-md md:text-lg font-semibold text-gray-300">{currentRace.duration}</h3>
         </div>
       </Link>
     </div>
