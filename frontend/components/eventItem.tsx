@@ -27,9 +27,10 @@ export function EventItem({season, race, index}: RaceListItemProps) {
   const [localStartDate, setLocalStartDate] = useState("");
   const [localEndDate, setLocalEndDate] = useState("");
 
+  console.log(race)
+
   useEffect(() => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     const startDateTime = new Date(race.startDate);
     const endDateTime = new Date(race.endDate);
@@ -87,7 +88,7 @@ export function EventItem({season, race, index}: RaceListItemProps) {
             <p className="ml-2 font-semibold">Completed</p>
           </div>
         ) : state == 0 ? (
-          <div className="flex flex-row text-green-500/70">
+          <div className="flex flex-row text-green-500">
             <FontAwesomeIcon icon={faHourglass} className="my-auto"/>
             <p className="ml-2 font-semibold">Ongoing</p>
           </div>

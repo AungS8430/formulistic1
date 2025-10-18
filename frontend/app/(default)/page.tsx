@@ -30,11 +30,11 @@ export default async function Home() {
       <CurrentRaceDisplay races={content} currentSeason={currentSeason} />
       <div className="flex flex-col gap-4">
         <h2 className="text-3xl font-bold">Select a Season</h2>
-        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4 w-full">
+        <div className="grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 w-full">
           {
             seasons.map((year) => (
               <Link key={year} href={`/seasons/${year}`}
-                    className="text-2xl md:text-4xl font-bold bg-primary-foreground hover:bg-secondary px-10 py-6 rounded-lg">
+                    className="text-4xl font-bold bg-primary-foreground hover:bg-secondary px-10 py-6 rounded-lg">
                 {year}
               </Link>
             ))
