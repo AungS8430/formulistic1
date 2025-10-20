@@ -22,7 +22,7 @@ export default async function Home() {
   );
   return (
     <div className="flex flex-col gap-10 items-center justify-between my-auto">
-      <h1 className={anton.className + " italic! text-7xl md:text-9xl mt-12 md:mt-0 gap-0 "}>
+      <h1 className={anton.className + " italic! text-7xl sm:text-8xl md:text-9xl mt-12 md:mt-0 gap-0 "}>
         <span className="text-red-thm">F</span>
         ORMULISTIC
         <span className="text-red-thm">1</span>

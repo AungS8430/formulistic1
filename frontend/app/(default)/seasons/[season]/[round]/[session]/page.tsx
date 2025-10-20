@@ -169,12 +169,12 @@ export default async function SessionPage({params}: { params: { season: string, 
         {
           (session == "race" || session == "sprint") && (
             <Link href={`/seasons/${season}/${round}/${session}/stats`}>
-              <Button variant="link" className="text-lg">View Stats</Button>
+              <Button variant="link" className="-mt-1 md:mt-auto text-base md:text-lg">View Stats</Button>
             </Link>
           )
         }
       </div>
-      <div className="max-h-[calc(100dvh-260px)] overflow-auto border rounded-lg">
+      <div className="max-h-[calc(100dvh-260px)] max-w-[calc(100dvw-50px)] overflow-y-hidden overflow-x-scroll border rounded-lg">
         {
           sessionResults ? (
             session == "quali" || session == "sq" ? (
