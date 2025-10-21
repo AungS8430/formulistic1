@@ -9,11 +9,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   NavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/navigation-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-import { Anton } from "next/font/google"
+import { Anton } from "next/font/google";
 import {useEffect, useState} from "react";
 import Link from "next/link";
 
@@ -72,10 +73,11 @@ export default function Navbar() {
           <Button variant="ghost" className={anton.className + " italic! text-2xl gap-0 cursor-pointer"}><span className="text-red-thm">F</span>ORMULISTIC<span className="text-red-thm">1</span></Button>
         </Link>
         <div className="grow" />
-        <NavigationMenu viewport={false}>
+        <SidebarTrigger className="flex md:hidden my-auto mx-2" size="lg"/>
+        <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuLink href="/live">Live</NavigationMenuLink>
+              <NavigationMenuLink className="font-medium" href="/live">Live</NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuTrigger>This Season</NavigationMenuTrigger>

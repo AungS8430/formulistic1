@@ -44,7 +44,7 @@ export function CurrentRaceDisplay({ races, currentSeason }: { races: any[], cur
             href={`/seasons/${currentSeason}/${currentRace.round}`}>
         <div className="flex flex-col text-center md:text-left justify-center">
           <h2 className="text-xl md:text-2xl font-bold">{currentRace.name}</h2>
-          <h3 className="textlg md:text-xl font-semibold text-gray-300">{currentRace.circuit}</h3>
+          <h3 className="text-lg md:text-xl font-semibold text-gray-300">{currentRace.circuit}</h3>
         </div>
         <div className="grow"/>
         <div className="flex flex-col text-center md:text-right justify-center">

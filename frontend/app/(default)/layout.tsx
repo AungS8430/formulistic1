@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Space_Mono } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider";
+import { SidebarProvider } from "@/components/ui/sidebar"
 import Navbar from "@/components/navbar";
+import AppSidebar from "@/components/sidebar";
 import "../globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -40,10 +42,14 @@ export default function RootLayout({
         enableSystem
         disableTransitionOnChange
       >
-        <Navbar />
-        <div className="mx-auto p-4 sm:px-4 grow flex">
-          {children}
-        </div>
+        <SidebarProvider className="flex flex-col">
+          <AppSidebar />
+          <Navbar />
+          <div className="mx-auto p-4 sm:px-4 grow flex">
+            {children}
+          </div>
+        </SidebarProvider>
+
       </ThemeProvider>
       </body>
       </html>

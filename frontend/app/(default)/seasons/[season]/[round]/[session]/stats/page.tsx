@@ -306,7 +306,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
         </TabsList>
       </div>
 
-      <TabsContent value="lap-by-lap" className="max-h-[calc(100dvh-260px)] overflow-auto border rounded-lg">
+      <TabsContent value="lap-by-lap" className="max-h-[calc(100dvh-260px)] max-w-[calc(100dvw-50px)] overflow-auto border rounded-lg">
         {
           sessionResults ? (
             <div className="flex flex-col w-full h-full">
@@ -438,7 +438,7 @@ export default function StatsPage({params}: { params: Promise<{ season: string, 
         }
       </TabsContent>
 
-      <TabsContent value="drivers" className="max-h-[calc(100dvh-260px)] overflow-auto border rounded-lg">
+      <TabsContent value="drivers" className="max-h-[calc(100dvh-260px)] max-w-[calc(100dvw-50px)] overflow-auto border rounded-lg">
         {
           sessionResults ? (
             <div className="flex flex-col w-full h-full">
