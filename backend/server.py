@@ -1,4 +1,4 @@
-from util.pastCache import data
+from util.pastCache import Data
 from util.Livetiming import (
     file_watcher, background_file_reader, get_race_data,
     get_session_info, get_track_status,
@@ -87,15 +87,15 @@ async def stream_compounds():
 
 @app.get("/session/laptimes")
 async def session_laptimes(year: int=2025, gp: int=1, session: str="r"):
-    return data.pass_data(year, gp, session, "laptime")
+    return Data.pass_data(year, gp, session, "laptime")
 
 @app.get("/session/weatherdata")
 async def session_weatherdata(year: int=2025, gp: int=1, session: str="r"):
-    return data.pass_data(year, gp, session, "weather")
+    return Data.pass_data(year, gp, session, "weather")
 
 @app.get("/session/results")
 async def session_results(year: int=2025, gp: int=1, session: str="r"):
-    return data.pass_data(year, gp, session, "results")
+    return Data.pass_data(year, gp, session, "results")
 
 @app.get("/session/info")
 async def session_info(year: int=2025, gp: int=1, session: str="r"):
