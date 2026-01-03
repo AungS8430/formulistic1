@@ -5,23 +5,24 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup, SidebarGroupContent,
-  SidebarHeader, SidebarMenu, SidebarMenuBadge, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub,
-  SidebarMenuSubButton, SidebarMenuSubItem,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
 import {useEffect, useState} from "react";
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible";
-import {NavigationMenuLink} from "@/components/ui/navigation-menu";
 import {Badge} from "@/components/ui/badge";
 import Link from "next/link";
 
 export default function AppSidebar() {
-  const currentSeason = new Date().getFullYear()
-
+  const [currentSeason, setCurrentSeason] = useState<number | null>(null)
   const [races, setRaces] = useState<null | { round: number, name: string, circuit: string, startDate: string, endDate: string, state: number }[]>(null)
   const [currentRace, setCurrentRace] = useState<null | { round: number, name: string }>(null)
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/season/schedule?year=${currentSeason}`).then((response) => response.json()).then((content) => {
+    fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/season/schedule`).then((response) => response.json()).then((content) => {
+      if (content.length > 0) {
+        setCurrentSeason(parseInt(content[0].season));
+      }
       const now = new Date();
       const getDateTime = (session: { date: string, time?: string } | undefined, fallbackDate: string, fallbackTime?: string) => {
         const dateStr = session?.date || fallbackDate;
@@ -51,12 +52,12 @@ export default function AppSidebar() {
       setRaces(data)
     })
 
-  }, [currentSeason])
+  }, [])
 
-  const pastSeasons = Array.from(
+  const pastSeasons = currentSeason ? Array.from(
     { length: currentSeason - 2018 },
     (_, i) => currentSeason - i - 1
-  )
+  ) : []
   return (
     <Sidebar className="pt-14 md:hidden!">
       <SidebarContent>
