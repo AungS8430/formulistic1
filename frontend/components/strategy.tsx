@@ -67,12 +67,12 @@ export default function StrategyChart({ strategy, compounds }: { strategy: Strat
               )
             } />
             <Tooltip
-              formatter={(value: number, name: string, props: any) => {
+              formatter={(value: number | undefined, name: string | undefined, props: any) => {
                 const payload = props && props.payload
-                const compoundKey = name + "_compound"
+                const compoundKey = (name ?? '') + "_compound"
                 const compound = payload && payload[compoundKey]
                 const abbr = compound ? compounds[compound]?.abbreviation ?? compound : ""
-                return [`${value}`, abbr || name]
+                return [`${value ?? ''}`, abbr || name || '']
               }}
             />
             {

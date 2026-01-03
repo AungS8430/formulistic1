@@ -10,8 +10,11 @@ const anton = Anton({
   weight: "400"
 })
 
-export default function Home() {
-  const currentSeason = new Date().getFullYear()
+export default async function Home() {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_ROUTE!}/season/schedule}`, {cache: "no-store"});
+  const content = await res.json();
+
+  const currentSeason = content[0].season;
 
   const seasons = Array.from(
     { length: currentSeason - 2018 + 1 },

@@ -9,7 +9,7 @@ CACHE_PATH = "./cache"
 
 
 @dataclass
-class index_format():
+class Index_format():
     year: int
     gp: str|int
     session_type: str
@@ -18,12 +18,27 @@ class index_format():
         return f"{self.year}-{self.gp}-{self.session_type}"
 
 
-class data():
+class Data():
     sessions = {}
+
+    @staticmethod
+    def _check_type(year: int, gp: int, session_type: str):
+        if type(year) != int:
+            return True
+        if type(gp) != int:
+            return True
+        if type(session_type) != str:
+            return True
+        if session_type not in ("r", "q", "ss", "sq", "fp1", "fp2", "fp3"):
+            return True
+        return False
+
 
     @classmethod
     def store_data(cls, year: int ,gp: int, session_type: str):
-        formated = index_format(year, gp, session_type)
+        if Data._check_type(year, gp, session_type):
+            raise TypeError("Invalid Type")
+        formated = Index_format(year, gp, session_type)
         os.makedirs(CACHE_PATH, exist_ok=True)
         path = f"{CACHE_PATH}/{formated}.json"
         data = get_session_data(year, gp, session_type)
@@ -37,7 +52,9 @@ class data():
 
     @classmethod
     def get_data(cls, year: int ,gp: int, session_type: str):
-        formated = index_format(year, gp, session_type)
+        if Data._check_type(year, gp, session_type):
+            raise TypeError("Invalid Type")
+        formated = Index_format(year, gp, session_type)
         if str(formated) in cls.sessions:
             return cls.sessions[str(formated)]
         path = f"{CACHE_PATH}/{formated}.json"
@@ -54,6 +71,8 @@ class data():
 
     @classmethod
     def pass_data(cls, year: int ,gp: int, session_type: str, data: Literal["laptime", "weather", "results", "strategy"]):
+        if Data._check_type(year, gp, session_type):
+            raise TypeError("Invalid Type")
         out = cls.get_data(year, gp, session_type)
         if out != ["Error", "Data not found"]:
             out = out[data] # pyright: ignore
