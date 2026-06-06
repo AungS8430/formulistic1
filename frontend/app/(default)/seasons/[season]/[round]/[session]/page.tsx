@@ -178,7 +178,7 @@ export default async function SessionPage({params}: { params: { season: string, 
         {
           sessionResults ? (
             session == "quali" || session == "sq" ? (
-              <div className="flex flex-col w-full h-full">
+              <div className="flex flex-col w-full max-h-[calc(100dvh-200px)]">
                 <div className="sticky top-0 z-10 bg-primary-foreground">
                   <Table className="text-base w-full">
                     <TableHeader>
