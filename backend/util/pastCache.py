@@ -29,7 +29,7 @@ class Data():
             return True
         if type(session_type) != str:
             return True
-        if session_type not in ("r", "q", "ss", "sq", "fp1", "fp2", "fp3"):
+        if session_type not in ("r", "q", "ss", "s", "sq", "fp1", "fp2", "fp3"):
             return True
         return False
 

@@ -65,8 +65,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 origins = [
-    "https://formulistic1.aungs.eu.org",
-    "https://formulistic1-git-development-aungs8430s-projects.vercel.app",
+    "https://formulistic1.aungs.dev"
 ]
 
 app.add_middleware(
@@ -86,25 +85,25 @@ async def stream_compounds():
     return get_compounds()
 
 @app.get("/session/laptimes")
-async def session_laptimes(year: int=2025, gp: int=1, session: str="r"):
+async def session_laptimes(year: int=2026, gp: int=1, session: str="r"):
     return Data.pass_data(year, gp, session, "laptime")
 
 @app.get("/session/weatherdata")
-async def session_weatherdata(year: int=2025, gp: int=1, session: str="r"):
+async def session_weatherdata(year: int=2026, gp: int=1, session: str="r"):
     return Data.pass_data(year, gp, session, "weather")
 
 @app.get("/session/results")
-async def session_results(year: int=2025, gp: int=1, session: str="r"):
+async def session_results(year: int=2026, gp: int=1, session: str="r"):
     return Data.pass_data(year, gp, session, "results")
 
 @app.get("/session/info")
-async def session_info(year: int=2025, gp: int=1, session: str="r"):
+async def session_info(year: int=2026, gp: int=1, session: str="r"):
     return get_race(year, gp)
 
 @app.get("/season/schedule")
-async def season_schedule(year: int=2025):
+async def season_schedule(year: int=2026):
     return get_schedule(year)
 
 @app.get("/season/standings")
-async def season_standings(year: int=2025):
+async def season_standings(year: int=2026):
     return get_standings(year)
